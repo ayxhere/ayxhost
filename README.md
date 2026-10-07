@@ -42,4 +42,3 @@ The app starts:
 Cloudflare DNS/hostname configuration is account-side configuration and is not automatically changed by the app.
 
 Node.js is intentionally a separate runtime module. A normal Linux Node binary must NOT be assumed to execute on Android. The next runtime module should be an Android-compatible ARM64 Node build published as a GitHub Release artifact.
-# ayxhost
