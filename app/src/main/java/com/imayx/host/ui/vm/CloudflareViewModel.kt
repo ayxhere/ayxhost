@@ -111,8 +111,8 @@ class CloudflareViewModel(app: Application) : AndroidViewModel(app) {
     // ---- credentials (never echoed back to the UI) ----------------------------------------------
 
     fun saveTunnelToken(value: String): Boolean {
-        val v = value.trim()
-        if (TunnelToken.parse(v) == null) {
+        val v = TunnelToken.canonicalize(value) ?: ""
+        if (v.isEmpty() || TunnelToken.parse(v) == null) {
             _messages.tryEmit("That does not look like a Cloudflare Tunnel token (Zero Trust → Networks → Tunnels → your tunnel → token).")
             return false
         }

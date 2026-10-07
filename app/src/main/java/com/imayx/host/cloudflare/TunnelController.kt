@@ -67,8 +67,9 @@ class TunnelController(
                     args.addAll(listOf("tunnel", "--no-autoupdate", "--url", "http://127.0.0.1:$port"))
                 }
                 TunnelMode.NAMED -> {
-                    val t = token?.trim().orEmpty()
-                    if (t.isEmpty()) return fail(mode, "Add a Tunnel Token or enable Quick Tunnel.")
+                    val rawToken = token?.trim().orEmpty()
+                    if (rawToken.isEmpty()) return fail(mode, "Add a Tunnel Token or enable Quick Tunnel.")
+                    val t = TunnelToken.canonicalize(rawToken) ?: rawToken
                     val parsed = TunnelToken.parse(t)
                         ?: return fail(mode, "Invalid tunnel token: it is not a Cloudflare Tunnel token. Copy it from Zero Trust → Networks → Tunnels.")
                     tunnelId = parsed.tunnelId
@@ -155,7 +156,10 @@ class TunnelController(
 
     private fun handleLine(raw: String) {
         val line = raw.trim()
-        val level = levelOf(line)
+        val lower = line.lowercase()
+        val level = if (levelOf(line) == LogLevel.INFO &&
+            (lower.startsWith("failed to ") || lower.contains("token is not valid") || lower.startsWith("error "))
+        ) LogLevel.ERROR else levelOf(line)
         LogBus.log(LogCategory.CLOUDFLARE, level, line)
 
         quickUrlRx.find(line)?.let { m ->
@@ -216,7 +220,8 @@ class TunnelController(
             (l.contains("lookup") && (l.contains(":53") || l.contains("no such host"))) ||
                 l.contains("no such host") || l.contains("dial udp") && l.contains(":53") ->
                 "DNS resolution failed inside cloudflared (Go builds read /etc/resolv.conf, which Android does not have). " +
-                    "This cloudflared build cannot resolve names on Android — import an Android-compatible build in Settings."
+                    "Quick Tunnel needs this lookup and cannot work here. Use a Named Tunnel (Tunnel Token) instead: it discovers the Cloudflare edge " +
+                    "with its own DNS-over-TLS fallback. Otherwise import an Android-compatible cloudflared build."
             l.contains("unable to reach the origin") || l.contains("127.0.0.1") && l.contains("connection refused") ->
                 "Local service unavailable: nothing is listening on the configured origin (is the host running on the right port?)."
             l.contains("network is unreachable") || l.contains("i/o timeout") || l.contains("no route to host") ->

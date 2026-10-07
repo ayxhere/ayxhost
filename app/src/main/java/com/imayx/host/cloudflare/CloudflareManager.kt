@@ -19,6 +19,31 @@ data class TunnelTokenInfo(val accountId: String, val tunnelId: String)
 
 object TunnelToken {
     /**
+     * Pastes often contain extra words ("cloudflared service install eyJ…"), line breaks or URL-safe base64.
+     * Go's decoder inside cloudflared is strict (standard alphabet, padded, no whitespace), so we re-encode the
+     * decoded JSON into canonical form. Returns null when [raw] is not a tunnel token.
+     */
+    fun canonicalize(raw: String): String? {
+        val candidate = raw.trim().split(Regex("\\s+")).let { parts ->
+            parts.firstOrNull { it.startsWith("eyJ") && it.length >= 40 } ?: parts.joinToString("")
+        }
+        if (candidate.isEmpty()) return null
+        val normalized = candidate.replace('-', '+').replace('_', '/')
+        val decoded = try {
+            Base64.decode(normalized, Base64.DEFAULT)
+        } catch (_: Exception) {
+            return null
+        }
+        return try {
+            val o = JSONObject(String(decoded, Charsets.UTF_8))
+            if (o.optString("a").isBlank() || o.optString("t").isBlank() || !o.has("s")) null
+            else Base64.encodeToString(decoded, Base64.NO_WRAP)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
      * A Cloudflare Tunnel token is base64(JSON {"a": accountId, "t": tunnelId, "s": secret}).
      * We only ever return a and t. This is NOT a Cloudflare dashboard/API credential.
      */
