@@ -3,76 +3,109 @@ package com.imayx.host
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.*
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.atomic.AtomicBoolean
 
-class CloudflareManager(private val context:Context) {
-    private val bin=File(context.filesDir,"bin/cloudflared")
-    private var process:Process?=null
-    private val running=AtomicBoolean(false)
-    @Volatile var publicUrl:String?=null
-    @Volatile var lastLog:String=""
+class CloudflareManager(private val context: Context) {
 
-    suspend fun installLatest():Result<String> = withContext(Dispatchers.IO) {
+    private val binDir = File(context.filesDir, "bin")
+    private val cloudflared = File(binDir, "cloudflared")
+
+    suspend fun installLatest(): Boolean = withContext(Dispatchers.IO) {
         try {
-            val api=URL("https://api.github.com/repos/cloudflare/cloudflared/releases/latest")
-            val c=api.openConnection() as HttpURLConnection
-            c.setRequestProperty("Accept","application/vnd.github+json")
-            c.setRequestProperty("User-Agent","IMAYX-Host")
-            val json=c.inputStream.bufferedReader().use{it.readText()}
-            val regex=Regex(""browser_download_url"\s*:\s*"([^"]*cloudflared-linux-arm64)"")
-            val match=regex.find(json) ?: return@withContext Result.failure(Exception("ARM64 cloudflared asset not found"))
-            val download=match.groupValues[1].replace("\/","/")
-            bin.parentFile?.mkdirs()
-            val d=URL(download).openConnection() as HttpURLConnection
-            d.setRequestProperty("User-Agent","IMAYX-Host")
-            d.inputStream.use { input -> FileOutputStream(bin).use { output -> input.copyTo(output) } }
-            if(!bin.setExecutable(true)) throw Exception("Could not mark cloudflared executable")
-            Result.success(bin.absolutePath)
-        } catch(e:Throwable) { Result.failure(e) }
-    }
+            binDir.mkdirs()
 
-    fun installed()=bin.exists() && bin.canExecute()
+            val apiUrl =
+                URL("https://api.github.com/repos/cloudflare/cloudflared/releases/latest")
 
-    fun stop() {
-        try { process?.destroy() } catch(_:Throwable){}
-        process=null; running.set(false)
-    }
+            val connection = apiUrl.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("Accept", "application/vnd.github+json")
+            connection.setRequestProperty("User-Agent", "IMAYX-Host")
+            connection.connectTimeout = 15000
+            connection.readTimeout = 30000
 
-    fun startQuick(port:Int,onLog:(String)->Unit) {
-        stop()
-        if(!installed()) throw IllegalStateException("Install cloudflared first")
-        Thread {
-            try {
-                val p=ProcessBuilder(bin.absolutePath,"tunnel","--no-autoupdate","--url","http://127.0.0.1:$port")
-                    .redirectErrorStream(true).start()
-                process=p; running.set(true)
-                p.inputStream.bufferedReader().forEachLine { line ->
-                    lastLog=line; onLog(line)
-                    val m=Regex("https://[a-z0-9-]+\.trycloudflare\.com").find(line)
-                    if(m!=null) publicUrl=m.value
+            val json = connection.inputStream.bufferedReader().use { it.readText() }
+            connection.disconnect()
+
+            val assetUrl = findArm64AssetUrl(json)
+                ?: return@withContext false
+
+            val download = URL(assetUrl).openConnection() as HttpURLConnection
+            download.requestMethod = "GET"
+            download.setRequestProperty("User-Agent", "IMAYX-Host")
+            download.connectTimeout = 15000
+            download.readTimeout = 120000
+
+            download.inputStream.use { input ->
+                cloudflared.outputStream().use { output ->
+                    input.copyTo(output)
                 }
-                running.set(false)
-            } catch(e:Throwable) { lastLog=e.message ?: "cloudflared error"; running.set(false) }
-        }.start()
+            }
+
+            download.disconnect()
+
+            cloudflared.setExecutable(true, false)
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 
-    fun startNamed(token:String,onLog:(String)->Unit) {
-        stop()
-        if(token.isBlank()) throw IllegalArgumentException("Cloudflare tunnel token is empty")
-        if(!installed()) throw IllegalStateException("Install cloudflared first")
-        Thread {
-            try {
-                val p=ProcessBuilder(bin.absolutePath,"tunnel","--no-autoupdate","run","--token",token)
-                    .redirectErrorStream(true).start()
-                process=p; running.set(true)
-                p.inputStream.bufferedReader().forEachLine { line -> lastLog=line; onLog(line) }
-                running.set(false)
-            } catch(e:Throwable) { lastLog=e.message ?: "cloudflared error"; running.set(false) }
-        }.start()
+    private fun findArm64AssetUrl(json: String): String? {
+        val pattern = Regex(
+            """https://[^"]+?/cloudflared-linux-arm64[^"]*"""
+        )
+
+        return pattern.find(json)?.value
     }
 
-    fun isRunning()=running.get()
+    fun isInstalled(): Boolean {
+        return cloudflared.exists() && cloudflared.canExecute()
+    }
+
+    fun startQuick(port: Int): Process? {
+        if (!isInstalled()) return null
+
+        return try {
+            ProcessBuilder(
+                cloudflared.absolutePath,
+                "tunnel",
+                "--no-autoupdate",
+                "--url",
+                "http://127.0.0.1:$port"
+            )
+                .redirectErrorStream(true)
+                .start()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun startNamed(token: String): Process? {
+        if (!isInstalled() || token.isBlank()) return null
+
+        return try {
+            ProcessBuilder(
+                cloudflared.absolutePath,
+                "tunnel",
+                "--no-autoupdate",
+                "run",
+                "--token",
+                token.trim()
+            )
+                .redirectErrorStream(true)
+                .start()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun stop(process: Process?) {
+        try {
+            process?.destroy()
+        } catch (_: Exception) {
+        }
+    }
 }
