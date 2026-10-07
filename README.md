@@ -1,44 +1,22 @@
-# IMAYX Host v2
+# IMAYX Host v3
 
-Standalone Android hosting app. WhatsRaX is not included.
+Android hosting control panel (`com.imayx.host`): static HTTP server, optional Node runtime, real `cloudflared` tunnels, multi-project management, file manager, code editor, backups, app lock.
 
-## What is actually implemented
+## Build
+- Gradle 8.9, AGP 8.7.3, Kotlin 2.0.21, Java 17, compileSdk/targetSdk 35, minSdk 24.
+- CI: `.github/workflows/build.yml` (ubuntu-24.04) installs Gradle 8.9 directly, builds `assembleDebug`, uploads `app-debug.apk`.
+- Local: `gradle assembleDebug` (no wrapper is committed).
 
-1. ZIP website import into the app sandbox.
-2. Safe ZIP extraction with path-traversal protection.
-3. A lightweight local static HTTP server on `127.0.0.1:3000`.
-4. Static MIME handling for HTML/CSS/JS/JSON/SVG/images/fonts/PDF.
-5. SPA fallback to `index.html`.
-6. Foreground hosting service.
-7. Real Cloudflare `cloudflared` process controller.
-8. ARM64 `cloudflared` download from the official Cloudflare GitHub release API.
-9. Quick Tunnel mode.
-10. Named Tunnel token mode.
-11. Persistent project/token/port settings.
+## cloudflared on Android (read this)
+- Android 10+ blocks executing binaries from app data. CI therefore bundles the official `cloudflared-linux-arm64` as `libcloudflared.so` in `jniLibs/arm64-v8a`, which runs from the native library dir.
+- Fallbacks: in-app download (Cloudflare tab → Install), custom URL, or Import file. Failures are reported with a real reason (DNS / permissions / wrong arch).
+- Go builds of cloudflared may fail DNS on Android (no `/etc/resolv.conf`). Use an Android-compatible build via Settings → custom URL if so.
 
-## Connect imayx.in
+## Features
+Dashboard · Projects (SAF ZIP import/export, Zip-Slip safe) · Files · Editor · Cloudflare (quick/named tunnel, API token, DNS/routes, connection test) · Logs (redacted) · Backups · Settings · App Lock (PIN/biometric) · Preview (WebView).
 
-For a temporary public URL:
-- Install cloudflared in the app.
-- Keep Quick Tunnel ON.
-- Start Host.
-- cloudflared creates a `https://*.trycloudflare.com` URL.
+## Security
+Tokens are AES-GCM encrypted with the Android Keystore, redacted from every log, excluded from backups and project folders. Server binds to 127.0.0.1 only.
 
-For `https://imayx.in`:
-1. In Cloudflare Zero Trust create a Tunnel.
-2. Add a Public Hostname for `imayx.in`.
-3. Set the service to `http://127.0.0.1:3000`.
-4. Copy the tunnel token.
-5. In IMAYX Host turn Quick Tunnel OFF.
-6. Paste the token.
-7. Import the website ZIP and set its project name.
-8. Start Host.
-
-The app starts:
-`127.0.0.1:3000 -> cloudflared -> Cloudflare -> imayx.in`
-
-## Important
-
-Cloudflare DNS/hostname configuration is account-side configuration and is not automatically changed by the app.
-
-Node.js is intentionally a separate runtime module. A normal Linux Node binary must NOT be assumed to execute on Android. The next runtime module should be an Android-compatible ARM64 Node build published as a GitHub Release artifact.
+## Node
+"Node runtime not installed" until you provide an Android-compatible ARM64 Node build (Settings → Node runtime). Official glibc Linux builds will not run.
