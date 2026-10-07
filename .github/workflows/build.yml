@@ -33,14 +33,20 @@ jobs:
         run: |
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Setup Gradle 8.9
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
+      - name: Install Gradle 8.9
+        run: |
+          curl -fL --retry 3 \
+            -o /tmp/gradle.zip \
+            https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          unzip -q /tmp/gradle.zip -d /tmp
+          echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Gradle
+        run: |
+          gradle --version
 
       - name: Build APK
         run: |
-          gradle --version
           gradle assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
