@@ -68,13 +68,8 @@ class CloudflareApi(private val tokenProvider: () -> String?) {
         return "HTTP $code"
     }
 
-    /**
-     * Account-owned tokens (dash → Manage Account → Account API tokens) verify at /accounts/{id}/tokens/verify,
-     * user tokens at /user/tokens/verify. Try the account endpoint first when the account id is known.
-     */
-    fun verifyToken(accountId: String? = null): ApiResult<String> {
-        var r = if (!accountId.isNullOrBlank()) call("GET", "/accounts/$accountId/tokens/verify") else call("GET", "/user/tokens/verify")
-        if (!r.ok && !accountId.isNullOrBlank()) r = call("GET", "/user/tokens/verify")
+    fun verifyToken(): ApiResult<String> {
+        val r = call("GET", "/user/tokens/verify")
         if (!r.ok) return ApiResult(false, null, r.error)
         val status = r.data?.optJSONObject("result")?.optString("status", "unknown") ?: "unknown"
         return ApiResult(status == "active", status, if (status == "active") null else "Token status: $status")

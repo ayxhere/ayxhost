@@ -329,7 +329,7 @@ class CloudflareViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun verifyApiToken() = api {
-        val r = g.cloudflareApi.verifyToken(tokenInfo()?.accountId)
+        val r = g.cloudflareApi.verifyToken()
         if (r.ok) {
             _ui.value = _ui.value.copy(apiMessage = "API token is active")
             null
