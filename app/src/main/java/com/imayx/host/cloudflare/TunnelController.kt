@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
+import java.net.Inet4Address
+import java.net.InetAddress
 
 /**
  * Runs `cloudflared` as a managed child process and derives a real TunnelState from its output.
@@ -28,6 +30,34 @@ class TunnelController(
     val state: StateFlow<TunnelState> = _state
 
     var onCrash: (() -> Unit)? = null
+
+    private val dns = DnsHelper(context)
+
+    /**
+     * cloudflared normally finds the Cloudflare edge with an SRV lookup, which fails on Android (no resolv.conf).
+     * We resolve the edge hostnames with Android's own resolver and pass the addresses explicitly.
+     */
+    private fun edgeArgs(): List<String> {
+        val addrs = LinkedHashSet<String>()
+        for (h in listOf("region1.v2.argotunnel.com", "region2.v2.argotunnel.com")) {
+            try {
+                for (a in InetAddress.getAllByName(h)) if (a is Inet4Address) addrs.add("${a.hostAddress}:7844")
+            } catch (_: Exception) {
+            }
+        }
+        if (addrs.isEmpty()) {
+            addrs.addAll(listOf("198.41.192.7:7844", "198.41.200.13:7844", "198.41.192.27:7844", "198.41.200.23:7844"))
+            LogBus.i(LogCategory.CLOUDFLARE, "Could not resolve Cloudflare edge; using built-in edge addresses")
+        } else {
+            LogBus.i(LogCategory.CLOUDFLARE, "Resolved ${addrs.size} Cloudflare edge address(es)")
+        }
+        val out = ArrayList<String>()
+        for (a in addrs.take(4)) {
+            out.add("--edge")
+            out.add(a)
+        }
+        return out
+    }
 
     @Volatile
     private var proc: ManagedProcess? = null
@@ -60,11 +90,13 @@ class TunnelController(
                 val why = ExecUtil.explain(probe?.error, manager.elfInfo() ?: com.imayx.host.runtime.ElfInfo.Info(false, "unknown", false, null))
                 return fail(mode, "cloudflared binary incompatible: $why")
             }
+            dns.start()
+            val edge = edgeArgs()
             val args = ArrayList<String>()
             var tunnelId: String? = null
             when (mode) {
                 TunnelMode.QUICK -> {
-                    args.addAll(listOf("tunnel", "--no-autoupdate", "--url", "http://127.0.0.1:$port"))
+                    args.addAll(listOf("tunnel", "--no-autoupdate")); args.addAll(edge); args.addAll(listOf("--url", "http://127.0.0.1:$port"))
                 }
                 TunnelMode.NAMED -> {
                     val rawToken = token?.trim().orEmpty()
@@ -73,7 +105,7 @@ class TunnelController(
                     val parsed = TunnelToken.parse(t)
                         ?: return fail(mode, "Invalid tunnel token: it is not a Cloudflare Tunnel token. Copy it from Zero Trust → Networks → Tunnels.")
                     tunnelId = parsed.tunnelId
-                    args.addAll(listOf("tunnel", "--no-autoupdate", "run", "--token", t))
+                    args.addAll(listOf("tunnel", "--no-autoupdate")); args.addAll(edge); args.addAll(listOf("run", "--token", t))
                 }
             }
             val cmd = manager.command(args) ?: return fail(mode, "cloudflared is not installed.")
