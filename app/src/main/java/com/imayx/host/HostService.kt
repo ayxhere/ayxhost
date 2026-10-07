@@ -14,10 +14,8 @@ class HostService : Service() {
     companion object {
         const val CHANNEL_ID = "imayx_host"
         const val NOTIFICATION_ID = 1001
-
         const val ACTION_START = "com.imayx.host.START"
         const val ACTION_STOP = "com.imayx.host.STOP"
-
         const val PORT = 3000
     }
 
@@ -57,9 +55,34 @@ class HostService : Service() {
 
         if (server != null) return
 
+        val prefs = getSharedPreferences(
+            "imayx_host",
+            MODE_PRIVATE
+        )
+
+        val projectName = prefs.getString(
+            "project_name",
+            "default"
+        ) ?: "default"
+
+        val port = prefs.getInt(
+            "port",
+            PORT
+        )
+
+        val quickTunnel = prefs.getBoolean(
+            "quick_tunnel",
+            true
+        )
+
+        val token = prefs.getString(
+            "tunnel_token",
+            ""
+        ) ?: ""
+
         val projectDir = File(
             filesDir,
-            "projects/default"
+            "projects/$projectName"
         )
 
         if (!projectDir.exists()) {
@@ -67,7 +90,7 @@ class HostService : Service() {
         }
 
         server = StaticServer(
-            port = PORT,
+            port = port,
             root = projectDir
         )
 
@@ -75,9 +98,11 @@ class HostService : Service() {
 
         val cloudflare = CloudflareManager(this)
 
-        // Start Quick Tunnel for now.
-        // Custom named tunnel can be wired after the APK builds.
-        tunnel = cloudflare.startQuick(PORT)
+        tunnel = if (!quickTunnel && token.isNotBlank()) {
+            cloudflare.startNamed(token)
+        } else {
+            cloudflare.startQuick(port)
+        }
     }
 
     private fun stopHosting() {
@@ -98,7 +123,6 @@ class HostService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "IMAYX Host",
@@ -113,19 +137,16 @@ class HostService : Service() {
 
     private fun createNotification(): Notification {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
             Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle("IMAYX Host")
-                .setContentText("Hosting server is running on port $PORT")
+                .setContentText("Hosting server is running")
                 .setSmallIcon(android.R.drawable.stat_sys_upload)
                 .setOngoing(true)
                 .build()
-
         } else {
-
             Notification.Builder(this)
                 .setContentTitle("IMAYX Host")
-                .setContentText("Hosting server is running on port $PORT")
+                .setContentText("Hosting server is running")
                 .setSmallIcon(android.R.drawable.stat_sys_upload)
                 .setOngoing(true)
                 .build()
@@ -137,7 +158,5 @@ class HostService : Service() {
         super.onDestroy()
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 }

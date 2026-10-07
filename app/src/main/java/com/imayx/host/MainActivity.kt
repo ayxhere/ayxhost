@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
+
+    private val prefs by lazy {
+        getSharedPreferences(
+            "imayx_host",
+            MODE_PRIVATE
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,43 +52,87 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startHost() {
-        val intent = Intent(this, HostService::class.java)
-            .setAction(HostService.ACTION_START)
+    private fun saveAndStart(
+        projectName: String,
+        portText: String,
+        quickTunnel: Boolean,
+        token: String
+    ) {
+        val port = portText.toIntOrNull()?.coerceIn(1024, 65535) ?: 3000
+
+        prefs.edit()
+            .putString(
+                "project_name",
+                projectName.ifBlank { "default" }
+            )
+            .putInt("port", port)
+            .putBoolean("quick_tunnel", quickTunnel)
+            .putString("tunnel_token", token.trim())
+            .apply()
+
+        val intent = Intent(
+            this,
+            HostService::class.java
+        ).setAction(
+            HostService.ACTION_START
+        )
 
         startForegroundService(intent)
     }
 
     private fun stopHost() {
-        val intent = Intent(this, HostService::class.java)
-            .setAction(HostService.ACTION_STOP)
+        val intent = Intent(
+            this,
+            HostService::class.java
+        ).setAction(
+            HostService.ACTION_STOP
+        )
 
         startService(intent)
     }
 
-    @androidx.compose.runtime.Composable
+    @Composable
     private fun HostScreen() {
 
         var projectName by remember {
-            mutableStateOf("default")
+            mutableStateOf(
+                prefs.getString(
+                    "project_name",
+                    "default"
+                ) ?: "default"
+            )
         }
 
         var port by remember {
-            mutableStateOf("3000")
+            mutableStateOf(
+                prefs.getInt("port", 3000).toString()
+            )
         }
 
         var quickTunnel by remember {
-            mutableStateOf(true)
+            mutableStateOf(
+                prefs.getBoolean(
+                    "quick_tunnel",
+                    true
+                )
+            )
         }
 
         var token by remember {
-            mutableStateOf("")
+            mutableStateOf(
+                prefs.getString(
+                    "tunnel_token",
+                    ""
+                ) ?: ""
+            )
         }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(
+                    rememberScrollState()
+                )
                 .padding(20.dp),
             verticalArrangement = Arrangement.Top
         ) {
@@ -90,39 +142,55 @@ class MainActivity : ComponentActivity() {
                 style = MaterialTheme.typography.headlineMedium
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Android hosting runtime",
-                style = MaterialTheme.typography.bodyMedium
+            Spacer(
+                modifier = Modifier.height(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Android hosting runtime"
+            )
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
 
             OutlinedTextField(
                 value = projectName,
-                onValueChange = { projectName = it },
+                onValueChange = {
+                    projectName = it
+                },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Project name") },
+                label = {
+                    Text("Project name")
+                },
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             OutlinedTextField(
                 value = port,
-                onValueChange = { port = it },
+                onValueChange = {
+                    port = it.filter(Char::isDigit)
+                },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Port") },
+                label = {
+                    Text("Port")
+                },
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Text(
                     text = "Cloudflare Quick Tunnel",
                     modifier = Modifier.weight(1f)
@@ -130,32 +198,49 @@ class MainActivity : ComponentActivity() {
 
                 Switch(
                     checked = quickTunnel,
-                    onCheckedChange = { quickTunnel = it }
+                    onCheckedChange = {
+                        quickTunnel = it
+                    }
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             OutlinedTextField(
                 value = token,
-                onValueChange = { token = it },
+                onValueChange = {
+                    token = it
+                },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Cloudflare Tunnel Token") },
+                label = {
+                    Text("Cloudflare Tunnel Token")
+                },
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
 
             Button(
                 onClick = {
-                    startHost()
+                    saveAndStart(
+                        projectName,
+                        port,
+                        quickTunnel,
+                        token
+                    )
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Start Host")
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             Button(
                 onClick = {
