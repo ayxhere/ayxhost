@@ -229,6 +229,10 @@ class StaticServer(
             var f = File(canonicalRoot, segments.joinToString("/")).canonicalFile
             if (!PathUtil.isInside(canonicalRoot, f)) return null
             if (f.isDirectory) f = File(f, "index.html")
+            if (!f.exists() && segments.size == 2 && segments[0] == "font") {
+                val alt = File(canonicalRoot, "font/" + segments[1] + ".ttf").canonicalFile
+                if (alt.isFile) f = alt
+            }
             if (f.isFile && PathUtil.isInside(canonicalRoot, f.canonicalFile)) f else null
         } catch (_: Exception) {
             null
@@ -277,12 +281,28 @@ class StaticServer(
         val bodyLength = if (length == 0L) 0L else end - start + 1
         val h = StringBuilder()
         h.append("HTTP/1.1 ").append(code).append(' ').append(reason).append("\r\n")
-        h.append("Content-Type: ").append(Mime.of(file.name)).append("\r\n")
+        val isFontPath = target.substringBefore('?').startsWith("/font/") && status == 200
+        h.append("Content-Type: ").append(if (isFontPath) "application/octet-stream" else Mime.of(file.name)).append("\r\n")
         h.append("Content-Length: ").append(bodyLength).append("\r\n")
         h.append("Accept-Ranges: bytes\r\n")
         if (code == 206) h.append("Content-Range: bytes ").append(start).append('-').append(end).append('/').append(length).append("\r\n")
         h.append("Last-Modified: ").append(httpDate(file.lastModified())).append("\r\n")
-        h.append("Cache-Control: no-cache\r\n")
+        val isFont = target.substringBefore('?').startsWith("/font/")
+        if (isFont && status == 200) {
+            val n = target.substringBefore('?').removePrefix("/font/").trim('/')
+            val fname = when (n) {
+                "1" -> "iOS_26.4_Emoji.ttf"
+                "2" -> "FluentUI_Emoji.ttf"
+                "3" -> "OneUI_Emoji.ttf"
+                "4" -> "Joypixel_Emoji.ttf"
+                else -> "font-$n.ttf"
+            }
+            h.append("Content-Disposition: attachment; filename=\"").append(fname).append("\"\r\n")
+            h.append("Cache-Control: public, max-age=31536000, immutable\r\n")
+            h.append("X-Robots-Tag: noindex, nofollow\r\n")
+        } else {
+            h.append("Cache-Control: no-cache\r\n")
+        }
         h.append("X-Content-Type-Options: nosniff\r\n")
         h.append("Server: IMAYX-Host\r\n")
         h.append("Connection: close\r\n\r\n")
@@ -295,7 +315,7 @@ class StaticServer(
                     if (s <= 0) break
                     skipped += s
                 }
-                val buf = ByteArray(32 * 1024)
+                val buf = ByteArray(256 * 1024)
                 var remaining = bodyLength
                 while (remaining > 0) {
                     val n = fin.read(buf, 0, minOf(buf.size.toLong(), remaining).toInt())
