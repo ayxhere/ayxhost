@@ -8,12 +8,30 @@ android {
     namespace = "com.imayx.host"
     compileSdk = 35
 
+    // Native bridge: CI compiles libnode_bridge.so from src/main/cpp via CMake
+    // (pass -PbuildNative). Local/on-device builds use the prebuilt .so from
+    // src/main/jniLibs and skip CMake entirely, because the SDK cmake binary
+    // shipped in on-device IDEs is frequently broken/unexecutable.
+    val buildNative = project.hasProperty("buildNative")
+
     defaultConfig {
         applicationId = "com.imayx.host"
         minSdk = 24
         targetSdk = 35
         versionCode = 3
         versionName = "3.0"
+
+        ndk {
+            // Embedded Node (libnode.so) ships arm64 only.
+            abiFilters += "arm64-v8a"
+        }
+        if (buildNative) {
+            externalNativeBuild {
+                cmake {
+                    arguments += "-DANDROID_STL=c++_shared"
+                }
+            }
+        }
     }
 
     buildTypes {
@@ -21,6 +39,16 @@ android {
             isMinifyEnabled = false
         }
     }
+
+    if (buildNative) {
+        externalNativeBuild {
+            cmake {
+                path = file("src/main/cpp/CMakeLists.txt")
+                version = "3.22.1"
+            }
+        }
+    }
+    ndkVersion = "26.3.11579264"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -33,6 +61,10 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    androidResources {
+        noCompress += "zip" // keep assets/ayx-backend.zip STORED, not deflated (mirrors the embedded-node reference)
     }
 
     packaging {
@@ -64,6 +96,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-service:2.8.7")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("androidx.security:security-crypto:1.0.0") // EncryptedSharedPreferences for the embedded backend's SESSION_SECRET
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
