@@ -23,6 +23,7 @@ data class SettingsUi(
     val defaultDomain: String = "",
     val projects: List<String> = emptyList(),
     val startOnBoot: Boolean = false,
+    val ayxBackend: Boolean = true,
     val notifications: Boolean = true,
     val autosave: Boolean = false,
     val cloudflaredUrl: String = "",
@@ -51,7 +52,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         val s = g.settings
         _ui.value = _ui.value.copy(
             theme = s.themeMode, port = s.defaultPort, defaultProject = s.activeProject, defaultDomain = s.defaultDomain,
-            startOnBoot = s.startOnBoot, notifications = s.notificationsEnabled, autosave = s.autosave,
+            startOnBoot = s.startOnBoot, ayxBackend = s.ayxBackendEnabled, notifications = s.notificationsEnabled, autosave = s.autosave,
             cloudflaredUrl = s.cloudflaredUrl, nodeUrl = s.nodeRuntimeUrl,
             lockEnabled = g.appLock.isEnabled(), biometric = g.appLock.isBiometricEnabled()
         )
@@ -83,6 +84,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setDefaultProject(n: String) { g.settings.activeProject = n; refresh() }
     fun setDefaultDomain(d: String) { g.settings.defaultDomain = d; refresh() }
     fun setStartOnBoot(v: Boolean) { g.settings.startOnBoot = v; refresh() }
+    fun setAyxBackend(v: Boolean) { g.settings.ayxBackendEnabled = v; refresh() }
     fun setNotifications(v: Boolean) { g.settings.notificationsEnabled = v; refresh() }
     fun setAutosave(v: Boolean) { g.settings.autosave = v; refresh() }
     fun setCloudflaredUrl(v: String) { g.settings.cloudflaredUrl = v; refresh() }
