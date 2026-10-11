@@ -29,7 +29,7 @@ class AppGraph(val app: Application) {
     val projects = ProjectManager(app, projectStore, settings, secrets)
     val backups = BackupManager(app, projects)
     val cloudflare = CloudflareManager(app, settings)
-    val tunnel = TunnelController(app, cloudflare, registry)
+    val tunnel = TunnelController(app, cloudflare, registry, settings)
     val cloudflareApi = CloudflareApi { secrets.get(SecretStore.KEY_API_TOKEN) }
     val nodeInstaller = NodeInstaller(app)
     val runtimes = RuntimeManager(app, projectStore, secrets, nodeInstaller, registry)
