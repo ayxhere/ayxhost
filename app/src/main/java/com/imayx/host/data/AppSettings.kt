@@ -85,11 +85,31 @@ class AppSettings(context: Context) {
             bump()
         }
 
+    /** Run the embedded AyX Group backend (Node.js + SQLite, in-app) alongside hosting. */
+    var ayxBackendEnabled: Boolean
+        get() = prefs.getBoolean("ayx_backend", true)
+        set(v) {
+            prefs.edit().putBoolean("ayx_backend", v).apply()
+            bump()
+        }
+
     /** Optional override for the cloudflared download URL (e.g. an Android-compatible build). */
     var cloudflaredUrl: String
         get() = prefs.getString("cloudflared_url", "") ?: ""
         set(v) {
             prefs.edit().putString("cloudflared_url", v.trim()).apply()
+            bump()
+        }
+
+    /** QUIC/UDP vs HTTP/2 transport for the Cloudflare tunnel edge connection. */
+    var tunnelTransport: TunnelTransport
+        get() = try {
+            TunnelTransport.valueOf(prefs.getString("tunnel_transport", TunnelTransport.AUTO.name) ?: TunnelTransport.AUTO.name)
+        } catch (_: Exception) {
+            TunnelTransport.AUTO
+        }
+        set(v) {
+            prefs.edit().putString("tunnel_transport", v.name).apply()
             bump()
         }
 
