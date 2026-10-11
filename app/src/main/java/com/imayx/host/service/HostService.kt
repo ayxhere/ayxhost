@@ -18,6 +18,7 @@ import com.imayx.host.data.ProcessState
 import com.imayx.host.data.TunnelState
 import com.imayx.host.data.TunnelStatus
 import com.imayx.host.graph
+import com.imayx.host.node.AyxBackendRuntime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -80,6 +81,11 @@ class HostService : Service() {
                 val project = intent?.getStringExtra(EXTRA_PROJECT)
                     ?: if (boot) g.host.bootProject() else null
                 g.host.start(project)
+                // Embedded AyX Group backend (Node.js + SQLite, in-app). It lives as long as
+                // this service does; AyxBackendRuntime is idempotent per OS process.
+                if (g.settings.ayxBackendEnabled) {
+                    AyxBackendRuntime.ensureStarted(this)
+                }
                 observeUntilStopped(expectStop = false)
             }
         }
