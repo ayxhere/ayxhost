@@ -9,8 +9,11 @@ import com.imayx.host.data.ProjectConfig
 import com.imayx.host.data.ProjectInfo
 import com.imayx.host.data.RuntimeType
 import com.imayx.host.graph
+import com.imayx.host.node.AyxBackendRuntime
 import com.imayx.host.projects.ZipInfo
 import com.imayx.host.service.HostService
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,6 +55,14 @@ class ProjectsViewModel(app: Application) : AndroidViewModel(app) {
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val messages: SharedFlow<String> = _messages
 
+    /** Result of the last one-off node script run; shown in a dialog, null when dismissed. */
+    private val _scriptResult = MutableStateFlow<String?>(null)
+    val scriptResult: StateFlow<String?> = _scriptResult
+
+    fun clearScriptResult() {
+        _scriptResult.value = null
+    }
+
     val activeProject: String get() = g.settings.activeProject
     val hostState get() = g.host.state
 
@@ -63,6 +74,85 @@ class ProjectsViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun nodeInstalled(): Boolean = g.nodeInstaller.isInstalled()
+
+    // ---- one-off node scripts (backend setup) ----------------------------------------------------
+
+    private suspend fun runNodeScriptSuspend(name: String, script: String, args: List<String>): Pair<Boolean, String> =
+        withContext(Dispatchers.IO) {
+            val cfg = g.projects.get(name) ?: return@withContext false to "Project not found"
+            if (cfg.runtime != RuntimeType.NODE) return@withContext false to "Not a Node project"
+            try {
+                val done = CompletableDeferred<Pair<Boolean, String>>()
+                g.runtimes.scriptRunner.run(cfg, script, args) { code, tail ->
+                    done.complete((code == 0) to tail.ifBlank { "Process exited with code $code" })
+                }
+                done.await()
+            } catch (e: CancellationException) {
+                g.runtimes.scriptRunner.stop()
+                throw e
+            } catch (e: Exception) {
+                false to (e.message ?: "Could not run script")
+            }
+        }
+
+    /** One-shot `node <script> [args…]` for NODE projects. The result appears in [scriptResult]. */
+    fun runNodeScript(name: String, script: String, args: List<String>) {
+        if (g.runtimes.scriptRunner.isRunning()) {
+            _messages.tryEmit("A script is already running — wait for it to finish")
+            return
+        }
+        viewModelScope.launch {
+            _ui.value = _ui.value.copy(busy = "Running node $script…")
+            val (ok, tail) = runNodeScriptSuspend(name, script, args)
+            _ui.value = _ui.value.copy(busy = null)
+            _scriptResult.value = (if (ok) "Done — " else "Failed — ") + "node $script\n\n$tail"
+        }
+    }
+
+    /** Parses a free-form command line like `scripts/migrate.js --flag` and runs it one-shot. */
+    fun runNodeCommandLine(name: String, commandLine: String) {
+        val parts = commandLine.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (parts.isEmpty()) return
+        val script = parts[0]
+        if (script.startsWith("/") || script.contains("..")) {
+            _messages.tryEmit("Refusing unsafe script path")
+            return
+        }
+        runNodeScript(name, script, parts.drop(1))
+    }
+
+    /**
+     * Creates an AyX Group backend admin account via the EMBEDDED backend
+     * (`node scripts/create-admin.js --username=… --password=…` inside the app).
+     * The password is passed to the process only and is never stored anywhere.
+     * [name] is the project context the dialog was opened from (unused — the
+     * backend is no longer a hosted project).
+     */
+    fun createBackendAdmin(name: String, username: String, password: String) {
+        if (username.length !in 3..64 || password.length < 12) {
+            _messages.tryEmit("Username needs 3–64 characters and the password at least 12")
+            return
+        }
+        viewModelScope.launch {
+            _ui.value = _ui.value.copy(busy = "Creating admin account…")
+            val (ok, tail) = withContext(Dispatchers.IO) {
+                val done = CompletableDeferred<Pair<Boolean, String>>()
+                try {
+                    AyxBackendRuntime.runNodeScript(
+                        getApplication(),
+                        "scripts/create-admin.js",
+                        listOf("--username=$username", "--password=$password")
+                    ) { code, out -> done.complete((code == 0) to out) }
+                } catch (e: Exception) {
+                    done.complete(false to (e.message ?: "Could not run script"))
+                }
+                done.await()
+            }
+            _ui.value = _ui.value.copy(busy = null)
+            _scriptResult.value = if (ok) "Admin \"$username\" created.\n\n$tail"
+            else "Could not create the admin account.\n\n$tail"
+        }
+    }
 
     private fun isHosted(name: String): Boolean {
         val h = g.host.state.value
