@@ -22,7 +22,7 @@ import java.util.zip.ZipInputStream
  * - CRITICAL: `node::Start` can only be called ONCE per process — a second call
  *   trips a Node assertion and SIGABRTs the whole app. There is therefore NO
  *   API for running one-shot node scripts: all local operations (e.g. admin
- *   bootstrap) go through the token-guarded `/v1/local/*` HTTP endpoints on the
+ *   bootstrap) go through the token-guarded `/v1/local/` HTTP endpoints on the
  *   already-running server instead (see [bootstrapAdmin]).
  * - SESSION_SECRET and LOCAL_OP_TOKEN are generated once (SecureRandom, 32 bytes
  *   hex each) and kept in EncryptedSharedPreferences; the SQLite DB lives at
