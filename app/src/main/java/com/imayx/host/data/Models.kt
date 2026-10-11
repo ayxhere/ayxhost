@@ -51,6 +51,9 @@ data class ProjectInfo(
 
 enum class TunnelMode { QUICK, NAMED }
 
+/** Transport protocol for the cloudflared edge connection. */
+enum class TunnelTransport { AUTO, QUIC, HTTP2 }
+
 enum class TunnelStatus { DISCONNECTED, STARTING, CONNECTED, FAILED }
 
 data class TunnelState(
