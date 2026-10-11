@@ -34,7 +34,8 @@ object AyxBackendRuntime {
     private const val KEY_SESSION_SECRET = "session_secret"
     private const val KEY_LOCAL_OP_TOKEN = "local_op_token"
 
-    private val serverStarted = AtomicBoolean(false)
+    private val startAttempted = AtomicBoolean(false)
+    private val serverAlive = AtomicBoolean(false)
     @Volatile private var backendDir: File? = null
 
     /** Starts the API server if it isn't running. Safe to call repeatedly. */
@@ -43,22 +44,31 @@ object AyxBackendRuntime {
             LogBus.w(LogCategory.NODE, "Embedded node not bundled (libnode.so missing) — AyX backend disabled")
             return
         }
-        if (!serverStarted.compareAndSet(false, true)) return
-        val dir = prepare(ctx) ?: run {
-            serverStarted.set(false)
+        // node::Start can only be called ONCE per OS process — a second call trips
+        // a Node assertion and SIGABRTs the whole app (the C++ bridge also refuses
+        // it). So this is one-shot: if node exits, we log and stay down until the
+        // app process restarts. Never reset this flag to "retry".
+        if (!startAttempted.compareAndSet(false, true)) {
+            LogBus.w(LogCategory.NODE, "Backend start already attempted in this process — not retrying")
             return
         }
+        val dir = prepare(ctx) ?: return
         backendDir = dir
         applyEnv(ctx, dir)
         Thread({
             LogBus.i(LogCategory.NODE, "starting AyX backend: ${dir.absolutePath}/src/server.js")
+            serverAlive.set(true)
             try {
                 val rc = NodeBridge.nativeStart(arrayOf("node", "src/server.js"), dir.absolutePath)
-                LogBus.w(LogCategory.NODE, "AyX backend exited rc=$rc")
+                if (rc == -99) {
+                    LogBus.e(LogCategory.NODE, "Backend start refused: node already started in this process")
+                } else {
+                    LogBus.w(LogCategory.NODE, "AyX backend exited rc=$rc — see node.log tail: ${nodeLogTail(ctx).takeLast(500)}")
+                }
             } catch (e: Throwable) {
                 LogBus.e(LogCategory.NODE, "AyX backend failed to start: ${e.message}")
             } finally {
-                serverStarted.set(false)
+                serverAlive.set(false)
             }
         }, "ayx-backend").start()
     }
@@ -80,7 +90,8 @@ object AyxBackendRuntime {
         Thread({
             try {
                 if (!isServerRunning()) {
-                    onDone(false, "Backend is not running — start hosting first, then create the admin account.")
+                    val tail = nodeLogTail(ctx).takeLast(800)
+                    onDone(false, "Backend is not running — start hosting first, then create the admin account.\n\nNode log:\n$tail")
                     return@Thread
                 }
                 val url = java.net.URL("http://127.0.0.1:$PORT/v1/local/admin/bootstrap")
@@ -116,10 +127,23 @@ object AyxBackendRuntime {
     }
 
     /** True while the API server thread is up. */
-    fun isServerRunning(): Boolean = serverStarted.get()
+    fun isServerRunning(): Boolean = serverAlive.get()
 
     /** Absolute path of the extracted backend dir, or null if not prepared yet. */
     fun dir(): File? = backendDir
+
+    /** Last ~2KB of the embedded node's log (node.log), for on-device diagnostics. */
+    fun nodeLogTail(ctx: Context): String {
+        return try {
+            val f = File(File(ctx.filesDir, "ayx-backend"), "node.log")
+            if (!f.exists()) return "(no node log yet)"
+            val bytes = f.readBytes()
+            val tail = if (bytes.size > 2048) bytes.copyOfRange(bytes.size - 2048, bytes.size) else bytes
+            tail.toString(Charsets.UTF_8)
+        } catch (e: Exception) {
+            "(could not read node log: ${e.message})"
+        }
+    }
 
     // ------------------------------------------------------------------ internals
 
