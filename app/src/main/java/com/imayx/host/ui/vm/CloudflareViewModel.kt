@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.imayx.host.cloudflare.IngressRoute
 import com.imayx.host.cloudflare.TunnelToken
 import com.imayx.host.cloudflare.TunnelTokenInfo
+import com.imayx.host.cloudflare.isVpnActive
 import com.imayx.host.data.LogBus
 import com.imayx.host.data.LogCategory
 import com.imayx.host.data.ProcessState
 import com.imayx.host.data.TunnelMode
 import com.imayx.host.data.TunnelState
 import com.imayx.host.data.TunnelStatus
+import com.imayx.host.data.TunnelTransport
 import com.imayx.host.graph
 import com.imayx.host.runtime.ExecUtil
 import com.imayx.host.security.SecretStore
@@ -39,6 +41,8 @@ data class CfUi(
     val installing: Boolean = false,
     val installPercent: Int? = null,
     val quick: Boolean = true,
+    val transport: TunnelTransport = TunnelTransport.AUTO,
+    val vpnActive: Boolean = false,
     val hasTunnelToken: Boolean = false,
     val hasApiToken: Boolean = false,
     val tokenInfo: TunnelTokenInfo? = null,
@@ -90,6 +94,8 @@ class CloudflareViewModel(app: Application) : AndroidViewModel(app) {
                     runnable = probe?.ok,
                     runError = if (probe != null && !probe.ok && info != null) ExecUtil.explain(probe.error, info) else null,
                     quick = g.settings.quickTunnel,
+                    transport = g.settings.tunnelTransport,
+                    vpnActive = isVpnActive(getApplication()),
                     hasTunnelToken = g.secrets.has(SecretStore.KEY_TUNNEL_TOKEN),
                     hasApiToken = g.secrets.has(SecretStore.KEY_API_TOKEN),
                     tokenInfo = tokenInfo()
@@ -145,6 +151,11 @@ class CloudflareViewModel(app: Application) : AndroidViewModel(app) {
     fun setQuick(v: Boolean) {
         g.settings.quickTunnel = v
         _ui.value = _ui.value.copy(quick = v)
+    }
+
+    fun setTransport(t: TunnelTransport) {
+        g.settings.tunnelTransport = t
+        _ui.value = _ui.value.copy(transport = t)
     }
 
     // ---- cloudflared binary ----------------------------------------------------------------------
