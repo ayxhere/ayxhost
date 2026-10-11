@@ -19,16 +19,20 @@ import java.util.zip.ZipInputStream
  *   (or after an app update) to `filesDir/ayx-backend`.
  * - The long-lived API server (`node src/server.js`, port 3101) is started exactly
  *   once per OS process via [ensureStarted], guarded by an [AtomicBoolean].
- * - One-shot scripts (e.g. `scripts/create-admin.js`) run through [runNodeScript],
- *   which intentionally bypasses the guard — it must NOT be used for the server.
- * - SESSION_SECRET is generated once (SecureRandom, 32 bytes hex) and kept in
- *   EncryptedSharedPreferences; the SQLite DB lives at
- *   `filesDir/ayx-backend/data/ayx.db`. Neither is ever logged.
+ * - CRITICAL: `node::Start` can only be called ONCE per process — a second call
+ *   trips a Node assertion and SIGABRTs the whole app. There is therefore NO
+ *   API for running one-shot node scripts: all local operations (e.g. admin
+ *   bootstrap) go through the token-guarded `/v1/local/*` HTTP endpoints on the
+ *   already-running server instead (see [bootstrapAdmin]).
+ * - SESSION_SECRET and LOCAL_OP_TOKEN are generated once (SecureRandom, 32 bytes
+ *   hex each) and kept in EncryptedSharedPreferences; the SQLite DB lives at
+ *   `filesDir/ayx-backend/data/ayx.db`. None are ever logged.
  */
 object AyxBackendRuntime {
     const val PORT = 3101
     private const val PREFS_FILE = "ayx_backend"
     private const val KEY_SESSION_SECRET = "session_secret"
+    private const val KEY_LOCAL_OP_TOKEN = "local_op_token"
 
     private val serverStarted = AtomicBoolean(false)
     @Volatile private var backendDir: File? = null
@@ -60,51 +64,55 @@ object AyxBackendRuntime {
     }
 
     /**
-     * Runs a one-shot node script inside the backend dir (e.g.
-     * `scripts/create-admin.js --username=… --password=…`). [onDone] is invoked
-     * once with the exit code and the last ~20 output lines. Arguments are never
-     * logged — pass one-off secrets (like an admin password) only as args.
+     * Creates the FIRST AyX backend admin account via the token-guarded
+     * `POST /v1/local/admin/bootstrap` endpoint on the already-running server.
+     * This MUST go over HTTP: starting a second node process in this OS process
+     * would trip Node's one-start-per-process assertion and crash the app.
+     * [onDone] is invoked once with the outcome. The password is sent only in
+     * the request body and is never stored or logged.
      */
-    fun runNodeScript(
+    fun bootstrapAdmin(
         ctx: Context,
-        scriptRelativePath: String,
-        args: List<String>,
-        onDone: (exitCode: Int, tail: String) -> Unit
+        username: String,
+        password: String,
+        onDone: (ok: Boolean, message: String) -> Unit
     ) {
-        val clean = scriptRelativePath.trim().trimStart('/')
-        require(clean.isNotEmpty() && !clean.contains("..")) { "Refusing unsafe script path" }
-        if (!NodeBridge.available) {
-            onDone(-1, "Embedded node not bundled (libnode.so missing)")
-            return
-        }
-        val dir = prepare(ctx) ?: run {
-            onDone(-1, "Backend not ready")
-            return
-        }
-        val script = File(dir, clean)
-        require(script.isFile) { "Script not found in backend: $clean" }
-        applyEnv(ctx, dir)
-
-        LogBus.i(LogCategory.NODE, "Running one-off script: node $clean")
-        val argv = ArrayList<String>(args.size + 2)
-        argv.add("node")
-        argv.add(script.absolutePath)
-        argv.addAll(args)
-        val tail = ArrayDeque<String>()
         Thread({
-            var code = -1
             try {
-                code = NodeBridge.nativeStart(argv.toTypedArray(), dir.absolutePath)
-            } catch (e: Throwable) {
-                synchronized(tail) { tail.addLast("Error: ${e.message}") }
+                if (!isServerRunning()) {
+                    onDone(false, "Backend is not running — start hosting first, then create the admin account.")
+                    return@Thread
+                }
+                val url = java.net.URL("http://127.0.0.1:$PORT/v1/local/admin/bootstrap")
+                val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 15000
+                    readTimeout = 15000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("x-local-token", localOpToken(ctx))
+                }
+                val body = org.json.JSONObject()
+                    .put("username", username)
+                    .put("password", password)
+                    .toString()
+                conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+                val code = conn.responseCode
+                val resp = try {
+                    conn.inputStream.bufferedReader().readText()
+                } catch (_: Exception) {
+                    conn.errorStream?.bufferedReader()?.readText().orEmpty()
+                }
+                when (code) {
+                    201 -> onDone(true, "Admin \"$username\" created.")
+                    409 -> onDone(false, "An admin account already exists.")
+                    403 -> onDone(false, "Not authorized.")
+                    else -> onDone(false, "Server returned $code: ${resp.take(200)}")
+                }
+            } catch (e: Exception) {
+                onDone(false, "Could not reach the backend: ${e.message}")
             }
-            val out = synchronized(tail) { tail.joinToString("\n") }
-            LogBus.i(LogCategory.NODE, "One-off script exited with code $code")
-            try {
-                onDone(code, out.ifBlank { "Process exited with code $code" })
-            } catch (_: Exception) {
-            }
-        }, "ayx-backend-script").start()
+        }, "ayx-admin-bootstrap").start()
     }
 
     /** True while the API server thread is up. */
@@ -140,11 +148,18 @@ object AyxBackendRuntime {
         NodeBridge.nativeSetenv("DB_PATH", File(dir, "data/ayx.db").absolutePath)
         NodeBridge.nativeSetenv("UPLOAD_DIR", File(dir, "uploads").absolutePath)
         NodeBridge.nativeSetenv("SESSION_SECRET", sessionSecret(ctx))
+        NodeBridge.nativeSetenv("LOCAL_OP_TOKEN", localOpToken(ctx))
         // Public base URL used to build absolute media URLs; CORS defaults cover imayx.in.
         NodeBridge.nativeSetenv("API_PUBLIC_BASE", "https://api.imayx.in")
     }
 
-    private fun sessionSecret(ctx: Context): String {
+    private fun sessionSecret(ctx: Context): String =
+        getOrCreateHexSecret(ctx, KEY_SESSION_SECRET)
+
+    private fun localOpToken(ctx: Context): String =
+        getOrCreateHexSecret(ctx, KEY_LOCAL_OP_TOKEN)
+
+    private fun getOrCreateHexSecret(ctx: Context, key: String): String {
         val alias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         val prefs = EncryptedSharedPreferences.create(
             PREFS_FILE,
@@ -153,11 +168,11 @@ object AyxBackendRuntime {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
-        prefs.getString(KEY_SESSION_SECRET, null)?.let { return it }
+        prefs.getString(key, null)?.let { return it }
         val bytes = ByteArray(32)
         SecureRandom().nextBytes(bytes)
         val hex = bytes.joinToString("") { "%02x".format(it) }
-        prefs.edit().putString(KEY_SESSION_SECRET, hex).apply()
+        prefs.edit().putString(key, hex).apply()
         return hex
     }
 
