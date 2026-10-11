@@ -114,6 +114,7 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel(), cf: CloudflareViewModel 
             SwitchRow("Autosave in editor", ui.autosave, { vm.setAutosave(it) })
             SwitchRow("Notifications", ui.notifications, { vm.setNotifications(it) }, subtitle = "Status notification while hosting")
             SwitchRow("Start on boot", ui.startOnBoot, { vm.setStartOnBoot(it) }, subtitle = "Resume hosting after the phone restarts (opt-in)")
+            SwitchRow("AyX backend", ui.ayxBackend, { vm.setAyxBackend(it) }, subtitle = "Run the AyX Group API inside the app (port 3101) while hosting")
         }
 
         SectionLabel("Cloudflare credentials")
