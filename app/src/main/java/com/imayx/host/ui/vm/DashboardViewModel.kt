@@ -38,7 +38,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     val resources: StateFlow<ResourceSnapshot?> = flow {
         while (true) {
             emit(sampleNow())
-            delay(2000)
+            delay(5000)
         }
     }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
