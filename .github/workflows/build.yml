@@ -37,7 +37,7 @@ jobs:
             SDKMANAGER="$(ls "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager | head -n1)"
           fi
           yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses > /dev/null || true
-          "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-35" "build-tools;35.0.0"
+          "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-35" "build-tools;35.0.0" "ndk;26.3.11579264" "cmake;3.22.1"
 
       - name: Install Gradle 8.9 (direct, checksum verified)
         run: |
@@ -86,6 +86,39 @@ jobs:
           fi
           file app/src/main/jniLibs/arm64-v8a/libcloudflared.so || true
 
+      # Embedded Node.js for the in-app AyX Group backend (no Termux needed).
+      # digidem/nodejs-mobile ships Node 24.x for Android arm64 — node:sqlite needs 22.5+.
+      # Placed as a native lib (extracted to nativeLibraryDir); CMake links node_bridge against it.
+      - name: Reassemble binary assets
+        run: |
+          set -euo pipefail
+          # Binaries are stored as base64 text parts (GitHub file API is text-only).
+          cat app/src/main/assets/ayx-backend.zip.b64.* | base64 -d > app/src/main/assets/ayx-backend.zip
+          echo "aa7337e1a231b859e46eae76357d25b955074c78d8fdbd9d0654c2e42ee5b77c  app/src/main/assets/ayx-backend.zip" | sha256sum -c -
+          cat gradle/wrapper/gradle-wrapper.jar.b64.* | base64 -d > gradle/wrapper/gradle-wrapper.jar
+          ls -l app/src/main/assets/ayx-backend.zip gradle/wrapper/gradle-wrapper.jar
+
+      - name: Bundle nodejs-mobile libnode.so as native lib
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          URL="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+            'https://api.github.com/repos/digidem/nodejs-mobile/releases?per_page=15' \
+            | jq -r '.[].assets[] | select(.name | test("-android-.*\\.zip$")) | select(.name | test("lite") | not) | .browser_download_url' \
+            | head -n1)"
+          test -n "$URL"
+          echo "Downloading $URL"
+          curl -fsSL --retry 3 -o /tmp/node-android.zip "$URL"
+          rm -rf /tmp/_node && mkdir -p /tmp/_node && unzip -q /tmp/node-android.zip -d /tmp/_node
+          SO="$(find /tmp/_node -path '*arm64-v8a*' -name 'libnode.so' | head -n1)"
+          test -n "$SO"
+          echo "libnode.so: $SO"
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp "$SO" app/src/main/jniLibs/arm64-v8a/libnode.so
+          file app/src/main/jniLibs/arm64-v8a/libnode.so || true
+
       - name: Scan for committed secrets
         run: |
           set -euo pipefail
@@ -96,7 +129,7 @@ jobs:
 
       - name: Build debug APK
         run: |
-          gradle assembleDebug --stacktrace --no-daemon
+          gradle assembleDebug -PbuildNative --stacktrace --no-daemon
 
       - name: Verify APK exists
         run: |
