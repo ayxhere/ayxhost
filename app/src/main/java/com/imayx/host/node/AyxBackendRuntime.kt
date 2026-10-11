@@ -89,11 +89,9 @@ object AyxBackendRuntime {
     ) {
         Thread({
             try {
-                if (!isServerRunning()) {
-                    val tail = nodeLogTail(ctx).takeLast(800)
-                    onDone(false, "Backend is not running — start hosting first, then create the admin account.\n\nNode log:\n$tail")
-                    return@Thread
-                }
+                // Don't gate on isServerRunning(): just try the loopback HTTP call.
+                // If node is up, this succeeds even if our liveness flag is stale;
+                // if it's down we get a fast connection-refused.
                 val url = java.net.URL("http://127.0.0.1:$PORT/v1/local/admin/bootstrap")
                 val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                     requestMethod = "POST"
@@ -120,6 +118,9 @@ object AyxBackendRuntime {
                     403 -> onDone(false, "Not authorized.")
                     else -> onDone(false, "Server returned $code: ${resp.take(200)}")
                 }
+            } catch (e: java.net.ConnectException) {
+                val tail = nodeLogTail(ctx).takeLast(800)
+                onDone(false, "Backend is not running — start hosting first, then create the admin account.\n\nNode log:\n$tail")
             } catch (e: Exception) {
                 onDone(false, "Could not reach the backend: ${e.message}")
             }
