@@ -62,6 +62,7 @@ import com.imayx.host.ui.components.LocalSnack
 import com.imayx.host.ui.components.Meter
 import com.imayx.host.ui.components.PromptDialog
 import com.imayx.host.ui.components.ScreenHeader
+import com.imayx.host.ui.components.SecretField
 import com.imayx.host.ui.components.StatusDot
 import com.imayx.host.ui.components.StatusPill
 import com.imayx.host.ui.components.SwitchRow
@@ -103,6 +104,7 @@ fun ProjectsScreen(
     var duplicateFor by remember { mutableStateOf<String?>(null) }
     var deleteFor by remember { mutableStateOf<String?>(null) }
     var exportFor by remember { mutableStateOf<String?>(null) }
+    val scriptResult by vm.scriptResult.collectAsStateWithLifecycle()
 
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) vm.stageImport(uri)
@@ -248,7 +250,27 @@ fun ProjectsScreen(
             onEnv = {
                 configFor = null
                 gate.request(lock) { envFor = cfg.name }
-            }
+            },
+            onCreateAdmin = { u, p -> vm.createBackendAdmin(cfg.name, u, p) },
+            onRunScript = { cmd -> vm.runNodeCommandLine(cfg.name, cmd) }
+        )
+    }
+
+    scriptResult?.let { result ->
+        AlertDialog(
+            onDismissRequest = { vm.clearScriptResult() },
+            containerColor = c.card,
+            titleContentColor = c.text,
+            textContentColor = c.soft,
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+            title = { Text("Script result") },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(result, style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = { IxButton("Close", { vm.clearScriptResult() }) },
+            dismissButton = {}
         )
     }
 
@@ -412,6 +434,49 @@ private fun CreateProjectDialog(onDismiss: () -> Unit, onCreate: (String, Runtim
 }
 
 @Composable
+private fun CreateAdminDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
+    val c = Ix.c
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val userErr = if (username.isNotEmpty() && username.length !in 3..64) "3–64 characters" else null
+    val passErr = if (password.isNotEmpty() && password.length < 12) "At least 12 characters" else null
+    val valid = username.length in 3..64 && password.length >= 12
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = c.card,
+        titleContentColor = c.text,
+        textContentColor = c.soft,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+        title = { Text("Create admin account") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    "Runs: node scripts/create-admin.js — the password is passed to the process only and is never stored.",
+                    color = c.soft,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                IxTextField(
+                    value = username,
+                    onValueChange = { username = it.trim() },
+                    label = "Username",
+                    isError = userErr != null,
+                    supportingText = userErr
+                )
+                SecretField(
+                    label = "Password",
+                    value = password,
+                    onValueChange = { password = it },
+                    hasSaved = false,
+                    supportingText = passErr ?: "Minimum 12 characters"
+                )
+            }
+        },
+        confirmButton = { IxButton("Create", onClick = { onConfirm(username, password) }, enabled = valid) },
+        dismissButton = { IxButton("Cancel", onDismiss, kind = BtnKind.Ghost) }
+    )
+}
+
+@Composable
 private fun ImportDialog(
     stage: ImportStage,
     existing: List<String>,
@@ -486,7 +551,9 @@ private fun ConfigDialog(
     nodeInstalled: Boolean,
     onDismiss: () -> Unit,
     onSave: (ProjectConfig) -> Unit,
-    onEnv: () -> Unit
+    onEnv: () -> Unit,
+    onCreateAdmin: (String, String) -> Unit,
+    onRunScript: (String) -> Unit
 ) {
     val c = Ix.c
     var runtime by remember { mutableStateOf(cfg.runtime) }
@@ -499,6 +566,8 @@ private fun ConfigDialog(
     var autoRestart by remember { mutableStateOf(cfg.autoRestart) }
     var entry by remember { mutableStateOf(cfg.entryFile) }
     var args by remember { mutableStateOf(cfg.nodeArgs) }
+    var showAdmin by remember { mutableStateOf(false) }
+    var oneOff by remember { mutableStateOf("") }
 
     val portNum = port.toIntOrNull()
     val portErr = if (portNum == null || portNum !in 1024..65535) "Use a port between 1024 and 65535" else null
@@ -535,6 +604,26 @@ private fun ConfigDialog(
                     IxTextField(entry, { entry = it.trim() }, "Entry file", isError = entryErr != null, supportingText = entryErr)
                     IxTextField(args, { args = it }, "Arguments (optional)")
                     IxButton("Environment secrets…", onClick = onEnv, kind = BtnKind.Secondary, modifier = Modifier.fillMaxWidth())
+                    Text(
+                        "Backend setup — the AyX Group backend needs SESSION_SECRET (and optional DB_PATH) in Environment secrets above.",
+                        color = c.soft,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    IxButton("Create admin account…", onClick = { showAdmin = true }, kind = BtnKind.Secondary, modifier = Modifier.fillMaxWidth())
+                    IxTextField(
+                        value = oneOff,
+                        onValueChange = { oneOff = it },
+                        label = "One-off command",
+                        placeholder = "scripts/migrate.js --flag",
+                        monospace = true
+                    )
+                    IxButton(
+                        "Run one-off command",
+                        onClick = { onRunScript(oneOff.trim()) },
+                        kind = BtnKind.Secondary,
+                        enabled = oneOff.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 IxTextField(domain, { domain = it }, "Custom domain", placeholder = "imayx.in", isError = domainErr != null, supportingText = domainErr ?: "Must also be routed to this tunnel in Cloudflare.")
                 SwitchRow("Cloudflare enabled", cf, { cf = it })
@@ -566,6 +655,16 @@ private fun ConfigDialog(
         },
         dismissButton = { IxButton("Cancel", onDismiss, kind = BtnKind.Ghost) }
     )
+
+    if (showAdmin) {
+        CreateAdminDialog(
+            onDismiss = { showAdmin = false },
+            onConfirm = { u, p ->
+                showAdmin = false
+                onCreateAdmin(u, p)
+            }
+        )
+    }
 }
 
 @Composable
