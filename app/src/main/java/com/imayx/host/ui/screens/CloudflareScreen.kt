@@ -43,11 +43,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.imayx.host.data.TunnelMode
 import com.imayx.host.data.TunnelStatus
+import com.imayx.host.data.TunnelTransport
 import com.imayx.host.graph
 import com.imayx.host.ui.cleanDomain
 import com.imayx.host.ui.components.BtnKind
 import com.imayx.host.ui.components.IxButton
 import com.imayx.host.ui.components.IxCard
+import com.imayx.host.ui.components.IxSelect
 import com.imayx.host.ui.components.IxTextField
 import com.imayx.host.ui.components.KeyValueRow
 import com.imayx.host.ui.components.LocalSnack
@@ -249,6 +251,33 @@ fun CloudflareScreen(vm: CloudflareViewModel = viewModel()) {
                 onChange = { vm.setQuick(it) },
                 subtitle = if (ui.quick) "ON — temporary trycloudflare.com URL, no token needed" else "OFF — a Tunnel Token is required"
             )
+            Spacer(Modifier.height(8.dp))
+            IxSelect(
+                label = "Tunnel transport",
+                selectedLabel = when (ui.transport) {
+                    TunnelTransport.AUTO -> "Auto (recommended)"
+                    TunnelTransport.QUIC -> "QUIC (UDP)"
+                    TunnelTransport.HTTP2 -> "HTTP/2 (TCP)"
+                },
+                options = listOf(
+                    TunnelTransport.AUTO.name to "Auto (recommended)",
+                    TunnelTransport.QUIC.name to "QUIC (UDP)",
+                    TunnelTransport.HTTP2.name to "HTTP/2 (TCP)"
+                ),
+                onSelect = { vm.setTransport(TunnelTransport.valueOf(it)) }
+            )
+            if (ui.vpnActive) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (ui.transport == TunnelTransport.QUIC)
+                        "A VPN is active on this device — QUIC (UDP) will likely fail. Switch the transport to Auto or HTTP/2."
+                    else
+                        "A VPN is active on this device — the tunnel will use HTTP/2 instead of QUIC, " +
+                            "because VPNs usually block the UDP traffic QUIC needs.",
+                    color = c.warn,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             Spacer(Modifier.height(8.dp))
             if (!credentialsUnlocked) {
                 IxButton(
