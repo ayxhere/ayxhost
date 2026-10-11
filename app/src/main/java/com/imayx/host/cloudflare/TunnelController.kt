@@ -1,12 +1,16 @@
 package com.imayx.host.cloudflare
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import com.imayx.host.data.AppSettings
 import com.imayx.host.data.LogBus
 import com.imayx.host.data.LogCategory
 import com.imayx.host.data.LogLevel
 import com.imayx.host.data.TunnelMode
 import com.imayx.host.data.TunnelState
 import com.imayx.host.data.TunnelStatus
+import com.imayx.host.data.TunnelTransport
 import com.imayx.host.runtime.ExecUtil
 import com.imayx.host.runtime.ManagedProcess
 import com.imayx.host.runtime.ProcessRegistry
@@ -18,13 +22,29 @@ import java.net.Inet4Address
 import java.net.InetAddress
 
 /**
+ * True when a VPN transport is active on any current network.
+ * Uses the existing ConnectivityManager — no extra permission required.
+ */
+fun isVpnActive(context: Context): Boolean {
+    return try {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        cm.allNetworks.any { net ->
+            cm.getNetworkCapabilities(net)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+        }
+    } catch (_: Exception) {
+        false
+    }
+}
+
+/**
  * Runs `cloudflared` as a managed child process and derives a real TunnelState from its output.
  * Nothing here is simulated: CONNECTED is only set after cloudflared logs "Registered tunnel connection".
  */
 class TunnelController(
     private val context: Context,
     private val manager: CloudflareManager,
-    private val registry: ProcessRegistry
+    private val registry: ProcessRegistry,
+    private val settings: AppSettings
 ) {
     private val _state = MutableStateFlow(TunnelState())
     val state: StateFlow<TunnelState> = _state
@@ -63,6 +83,16 @@ class TunnelController(
     private var proc: ManagedProcess? = null
     private val lock = Any()
 
+    /** Last start parameters, so AUTO mode can retry once with HTTP/2 after a QUIC failure. */
+    @Volatile
+    private var lastStart: Triple<TunnelMode, Int, String?>? = null
+    @Volatile
+    private var http2FallbackDone = false
+    @Volatile
+    private var usingHttp2 = false
+    /** Incremented on every start; lets stale process-exit callbacks ignore themselves. */
+    private var generation = 0
+
     private val quickUrlRx = Regex("https://[a-z0-9-]+\\.trycloudflare\\.com")
     private val tunnelIdRx = Regex("tunnelID=([0-9a-fA-F-]{36})")
     private val locationRx = Regex("location=([A-Za-z0-9-]+)")
@@ -77,10 +107,30 @@ class TunnelController(
 
     /** Starts the tunnel. Returns an error message, or null when the process was launched. */
     fun start(mode: TunnelMode, port: Int, token: String?): String? {
-        return synchronized(lock) { startLocked(mode, port, token) }
+        return synchronized(lock) {
+            lastStart = Triple(mode, port, token)
+            http2FallbackDone = false
+            startLocked(mode, port, token, forceHttp2 = false)
+        }
     }
 
-    private fun startLocked(mode: TunnelMode, port: Int, token: String?): String? {
+    /**
+     * AUTO-mode recovery: after a QUIC dial failure, restart ONCE with `--protocol http2`.
+     * The [http2FallbackDone] flag is set atomically here, so this can never loop even if
+     * several QUIC error lines arrive on both output pumps.
+     */
+    private fun retryWithHttp2() {
+        val l = synchronized(lock) {
+            if (http2FallbackDone) return
+            http2FallbackDone = true
+            lastStart
+        } ?: return
+        synchronized(lock) {
+            startLocked(l.first, l.second, l.third, forceHttp2 = true)
+        }
+    }
+
+    private fun startLocked(mode: TunnelMode, port: Int, token: String?, forceHttp2: Boolean): String? {
         stopLocked()
             if (!manager.isInstalled()) {
                 return fail(mode, "cloudflared is not installed. Open the Cloudflare tab and press \"Install cloudflared\".")
@@ -92,11 +142,32 @@ class TunnelController(
             }
             dns.start()
             val edge = edgeArgs()
+            // Transport selection: explicit setting wins; AUTO uses QUIC unless a VPN is
+            // active (VPNs usually block the UDP traffic QUIC needs), then HTTP/2 over TCP/443.
+            val transportSetting = settings.tunnelTransport
+            val vpnActive = isVpnActive(context)
+            val useHttp2 = forceHttp2 || transportSetting == TunnelTransport.HTTP2 ||
+                (transportSetting == TunnelTransport.AUTO && vpnActive)
+            usingHttp2 = useHttp2
             val args = ArrayList<String>()
+            args.add("tunnel")
+            args.add("--no-autoupdate")
+            if (useHttp2) {
+                args.add("--protocol")
+                args.add("http2")
+                if (forceHttp2) {
+                    LogBus.w(LogCategory.CLOUDFLARE, "Retrying tunnel with HTTP/2 transport (TCP/443) after QUIC failure")
+                } else if (transportSetting == TunnelTransport.AUTO && vpnActive) {
+                    LogBus.i(LogCategory.CLOUDFLARE, "VPN detected — using HTTP/2 transport (QUIC/UDP is usually blocked by VPNs)")
+                } else {
+                    LogBus.i(LogCategory.CLOUDFLARE, "Using HTTP/2 tunnel transport (per settings)")
+                }
+            }
+            args.addAll(edge)
             var tunnelId: String? = null
             when (mode) {
                 TunnelMode.QUICK -> {
-                    args.addAll(listOf("tunnel", "--no-autoupdate")); args.addAll(edge); args.addAll(listOf("--url", "http://127.0.0.1:$port"))
+                    args.addAll(listOf("--url", "http://127.0.0.1:$port"))
                 }
                 TunnelMode.NAMED -> {
                     val rawToken = token?.trim().orEmpty()
@@ -105,7 +176,7 @@ class TunnelController(
                     val parsed = TunnelToken.parse(t)
                         ?: return fail(mode, "Invalid tunnel token: it is not a Cloudflare Tunnel token. Copy it from Zero Trust → Networks → Tunnels.")
                     tunnelId = parsed.tunnelId
-                    args.addAll(listOf("tunnel", "--no-autoupdate")); args.addAll(edge); args.addAll(listOf("run", "--token", t))
+                    args.addAll(listOf("run", "--token", t))
                 }
             }
             val cmd = manager.command(args) ?: return fail(mode, "cloudflared is not installed.")
@@ -125,6 +196,8 @@ class TunnelController(
             )
             LogBus.i(LogCategory.CLOUDFLARE, "Starting cloudflared (${if (mode == TunnelMode.QUICK) "quick tunnel → 127.0.0.1:$port" else "named tunnel"})")
 
+            generation++
+            val gen = generation
             val p = ManagedProcess(
                 command = cmd,
                 workDir = home,
@@ -132,7 +205,7 @@ class TunnelController(
                 registry = registry,
                 registryMarker = "cloudflared",
                 onLine = { line, _ -> handleLine(line) },
-                onExit = { code, requested -> handleExit(code, requested) }
+                onExit = { code, requested -> handleExit(gen, code, requested) }
             )
             try {
                 p.start()
@@ -241,6 +314,22 @@ class TunnelController(
         } else if (line.contains("Unable to reach the origin service", ignoreCase = true)) {
             _state.update { it.copy(lastError = friendlyError(line)) }
         }
+
+        // AUTO fallback: a QUIC dial failure almost always means something on the device
+        // (usually a VPN) is blocking UDP. Restart ONCE with HTTP/2, then report normally.
+        // The one-shot guard lives in retryWithHttp2() (atomic check-and-set).
+        if (!usingHttp2 &&
+            settings.tunnelTransport == TunnelTransport.AUTO &&
+            line.contains("failed to dial to edge with quic", ignoreCase = true)
+        ) {
+            LogBus.w(
+                LogCategory.CLOUDFLARE,
+                "QUIC dial to the Cloudflare edge failed — a VPN on this device often blocks the UDP traffic QUIC needs. " +
+                    "Retrying once with HTTP/2 transport…"
+            )
+            _state.update { it.copy(status = TunnelStatus.STARTING, lastError = "QUIC blocked (a VPN is the likely cause) — retrying once with HTTP/2…") }
+            Thread({ retryWithHttp2() }, "ix-tunnel-h2retry").apply { isDaemon = true; start() }
+        }
     }
 
     private fun friendlyError(line: String): String {
@@ -256,6 +345,10 @@ class TunnelController(
                     "with its own DNS-over-TLS fallback. Otherwise import an Android-compatible cloudflared build."
             l.contains("unable to reach the origin") || l.contains("127.0.0.1") && l.contains("connection refused") ->
                 "Local service unavailable: nothing is listening on the configured origin (is the host running on the right port?)."
+            l.contains("failed to dial to edge with quic") ->
+                "QUIC/UDP dial to the Cloudflare edge failed — a VPN on this device is the most likely cause (VPNs often block UDP). " +
+                    if (http2FallbackDone) "HTTP/2 fallback was already tried: disable the VPN for IMAYX Host (split-tunneling), or set Tunnel transport to HTTP/2 in the Cloudflare tab."
+                    else "Retrying automatically with HTTP/2 transport…"
             l.contains("network is unreachable") || l.contains("i/o timeout") || l.contains("no route to host") ->
                 "Network unavailable: cloudflared cannot reach the Cloudflare edge."
             l.contains("certificate") && (l.contains("x509") || l.contains("unknown authority")) ->
@@ -264,8 +357,10 @@ class TunnelController(
         }
     }
 
-    private fun handleExit(code: Int, requested: Boolean) {
+    private fun handleExit(gen: Int, code: Int, requested: Boolean) {
         synchronized(lock) {
+            // Superseded by a newer start (e.g. the HTTP/2 retry): ignore this stale exit.
+            if (gen != generation) return
             proc = null
         }
         if (requested) {
