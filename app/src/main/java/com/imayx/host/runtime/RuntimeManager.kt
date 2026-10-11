@@ -295,6 +295,9 @@ class RuntimeManager(
     val static = StaticRuntime(store)
     val node = NodeRuntime(context, store, secrets, nodeInstaller, registry)
 
+    /** One-shot `node <script>` runner for NODE projects (admin creation, migrations, …). */
+    val scriptRunner = NodeScriptRunner(context, store, secrets, nodeInstaller, registry)
+
     fun forType(type: RuntimeType): ProjectRuntime = when (type) {
         RuntimeType.STATIC -> static
         RuntimeType.NODE -> node
