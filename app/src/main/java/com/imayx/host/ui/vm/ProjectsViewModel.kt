@@ -122,9 +122,11 @@ class ProjectsViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Creates an AyX Group backend admin account via the EMBEDDED backend
-     * (`node scripts/create-admin.js --username=… --password=…` inside the app).
-     * The password is passed to the process only and is never stored anywhere.
+     * Creates an AyX Group backend admin account via the token-guarded
+     * `POST /v1/local/admin/bootstrap` endpoint on the embedded backend.
+     * This goes over loopback HTTP — never a second node process (node::Start
+     * can only run once per OS process; a second call SIGABRTs the app).
+     * The password is sent only in the request body and is never stored.
      * [name] is the project context the dialog was opened from (unused — the
      * backend is no longer a hosted project).
      */
@@ -135,22 +137,20 @@ class ProjectsViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             _ui.value = _ui.value.copy(busy = "Creating admin account…")
-            val (ok, tail) = withContext(Dispatchers.IO) {
+            val (ok, msg) = withContext(Dispatchers.IO) {
                 val done = CompletableDeferred<Pair<Boolean, String>>()
                 try {
-                    AyxBackendRuntime.runNodeScript(
-                        getApplication(),
-                        "scripts/create-admin.js",
-                        listOf("--username=$username", "--password=$password")
-                    ) { code, out -> done.complete((code == 0) to out) }
+                    AyxBackendRuntime.bootstrapAdmin(
+                        getApplication(), username, password
+                    ) { ok, message -> done.complete(ok to message) }
                 } catch (e: Exception) {
-                    done.complete(false to (e.message ?: "Could not run script"))
+                    done.complete(false to (e.message ?: "Could not create admin"))
                 }
                 done.await()
             }
             _ui.value = _ui.value.copy(busy = null)
-            _scriptResult.value = if (ok) "Admin \"$username\" created.\n\n$tail"
-            else "Could not create the admin account.\n\n$tail"
+            _scriptResult.value = if (ok) "Admin \"$username\" created.\n\n$msg"
+            else "Could not create the admin account.\n\n$msg"
         }
     }
 
