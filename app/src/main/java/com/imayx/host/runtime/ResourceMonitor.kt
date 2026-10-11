@@ -39,6 +39,9 @@ class ResourceMonitor(private val context: Context) {
     private var cachedProjectBytes: Long? = null
     private var cachedProjectAt = 0L
     private var cachedProjectDir: String? = null
+    /** Debug.getPss() is expensive — refresh the app-RAM figure at most every 15s. */
+    private var cachedAppRam: Long = 0L
+    private var cachedAppRamAt: Long = 0L
     private val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
 
     @Synchronized
@@ -60,10 +63,16 @@ class ResourceMonitor(private val context: Context) {
         val mi = ActivityManager.MemoryInfo()
         am.getMemoryInfo(mi)
         val ramUsed = (mi.totalMem - mi.availMem).coerceAtLeast(0)
-        val appRam = try {
-            Debug.getPss() * 1024
-        } catch (_: Throwable) {
-            Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+        val appRam = if (cachedAppRamAt == 0L || now - cachedAppRamAt > 15_000) {
+            cachedAppRam = try {
+                Debug.getPss() * 1024
+            } catch (_: Throwable) {
+                Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+            }
+            cachedAppRamAt = now
+            cachedAppRam
+        } else {
+            cachedAppRam
         }
 
         val stat = StatFs(context.filesDir.path)
@@ -73,7 +82,7 @@ class ResourceMonitor(private val context: Context) {
         var projectBytes: Long? = null
         if (projectDir != null) {
             val key = projectDir.path
-            if (cachedProjectDir != key || now - cachedProjectAt > 15_000) {
+            if (cachedProjectDir != key || now - cachedProjectAt > 60_000) {
                 cachedProjectBytes = if (projectDir.isDirectory) PathUtil.folderSize(projectDir) else 0L
                 cachedProjectAt = now
                 cachedProjectDir = key
