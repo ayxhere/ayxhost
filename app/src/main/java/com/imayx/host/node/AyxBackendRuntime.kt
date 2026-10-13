@@ -1,1 +1,243 @@
-cGFja2FnZSBjb20uaW1heXguaG9zdC5ub2RlCgppbXBvcnQgYW5kcm9pZC5jb250ZW50LkNvbnRleHQKaW1wb3J0IGFuZHJvaWR4LnNlY3VyaXR5LmNyeXB0by5FbmNyeXB0ZWRTaGFyZWRQcmVmZXJlbmNlcwppbXBvcnQgYW5kcm9pZHguc2VjdXJpdHkuY3J5cHRvLk1hc3RlcktleXMKaW1wb3J0IGNvbS5pbWF5eC5ob3N0LmRhdGEuTG9nQnVzCmltcG9ydCBjb20uaW1heXguaG9zdC5kYXRhLkxvZ0NhdGVnb3J5CmltcG9ydCBqYXZhLmlvLkZpbGUKaW1wb3J0IGphdmEuaW8uRmlsZU91dHB1dFN0cmVhbQppbXBvcnQgamF2YS5zZWN1cml0eS5TZWN1cmVSYW5kb20KaW1wb3J0IGphdmEudXRpbC5jb25jdXJyZW50LmF0b21pYy5BdG9taWNCb29sZWFuCmltcG9ydCBqYXZhLnV0aWwuemlwLlppcElucHV0U3RyZWFtCgovKioKICogT3ducyB0aGUgZW1iZWRkZWQgQXlYIEdyb3VwIGJhY2tlbmQgKE5vZGUuanMgKyBTUUxpdGUsIHJ1bm5pbmcgaW5zaWRlIHRoZSBhcHAKICogcHJvY2VzcyB2aWEgW05vZGVCcmlkZ2VdIOKAlCBubyBUZXJtdXgsIG5vIGV4dGVybmFsIE5vZGUgYmluYXJ5IG5lZWRlZCkuCiAqCiAqIC0gVGhlIGJhY2tlbmQgaXMgYnVuZGxlZCBhcyBgYXNzZXRzL2F5eC1iYWNrZW5kLnppcGAgYW5kIGV4dHJhY3RlZCBvbiBmaXJzdCBydW4KICogICAob3IgYWZ0ZXIgYW4gYXBwIHVwZGF0ZSkgdG8gYGZpbGVzRGlyL2F5eC1iYWNrZW5kYC4KICogLSBUaGUgbG9uZy1saXZlZCBBUEkgc2VydmVyIChgbm9kZSBzcmMvc2VydmVyLmpzYCwgcG9ydCAzMTAxKSBpcyBzdGFydGVkIGV4YWN0bHkKICogICBvbmNlIHBlciBPUyBwcm9jZXNzIHZpYSBbZW5zdXJlU3RhcnRlZF0sIGd1YXJkZWQgYnkgYW4gW0F0b21pY0Jvb2xlYW5dLgogKiAtIE5PVEU6IHdpc2gtc2VydmljZSBpbnRlZ3JhdGlvbiB3YXMgcmV2ZXJ0ZWQgKDIwMjYtMTAtMTMpIOKAlCBsYXVuY2hlci5qcyBjYXVzZWQKICogICBzdGFydHVwIGNyYXNoZXMuIFdpc2ggd2lsbCBiZSByZS1hZGRlZCBhZnRlciByb290IGNhdXNlIGlzIGZpeGVkLgogKiAtIENSSVRJQ0FMOiBgbm9kZTo6U3RhcnRgIGNhbiBvbmx5IGJlIGNhbGxlZCBPTkNFIHBlciBwcm9jZXNzIOKAlCBhIHNlY29uZCBjYWxsCiAqICAgdHJpcHMgYSBOb2RlIGFzc2VydGlvbiBhbmQgU0lHQUJSVHMgdGhlIHdob2xlIGFwcC4gVGhlcmUgaXMgdGhlcmVmb3JlIE5PCiAqICAgQVBJIGZvciBydW5uaW5nIG9uZS1zaG90IG5vZGUgc2NyaXB0czogYWxsIGxvY2FsIG9wZXJhdGlvbnMgKGUuZy4gYWRtaW4KICogICBib290c3RyYXApIGdvIHRocm91Z2ggdGhlIHRva2VuLWd1YXJkZWQgYC92MS9sb2NhbC9gIEhUVFAgZW5kcG9pbnRzIG9uIHRoZQogKiAgIGFscmVhZHktcnVubmluZyBzZXJ2ZXIgaW5zdGVhZCAoc2VlIFtib290c3RyYXBBZG1pbl0pLgogKiAtIFNFU1NJT05fU0VDUkVUIGFuZCBMT0NBTF9PUF9UT0tFTiBhcmUgZ2VuZXJhdGVkIG9uY2UgKFNlY3VyZVJhbmRvbSwgMzIgYnl0ZXMKICogICBoZXggZWFjaCkgYW5kIGtlcHQgaW4gRW5jcnlwdGVkU2hhcmVkUHJlZmVyZW5jZXM7IHRoZSBTUUxpdGUgREIgbGl2ZXMgYXQKICogICBgZmlsZXNEaXIvYXl4LWJhY2tlbmQvZGF0YS9heXguZGJgLiBOb25lIGFyZSBldmVyIGxvZ2dlZC4KICovCm9iamVjdCBBeXhCYWNrZW5kUnVudGltZSB7CiAgICBjb25zdCB2YWwgUE9SVCA9IDMxMDEKICAgIHByaXZhdGUgY29uc3QgdmFsIFBSRUZTX0ZJTEUgPSAiYXl4X2JhY2tlbmQiCiAgICBwcml2YXRlIGNvbnN0IHZhbCBLRVlfU0VTU0lPTl9TRUNSRVQgPSAic2Vzc2lvbl9zZWNyZXQiCiAgICBwcml2YXRlIGNvbnN0IHZhbCBLRVlfTE9DQUxfT1BfVE9LRU4gPSAibG9jYWxfb3BfdG9rZW4iCgogICAgcHJpdmF0ZSB2YWwgc3RhcnRBdHRlbXB0ZWQgPSBBdG9taWNCb29sZWFuKGZhbHNlKQogICAgcHJpdmF0ZSB2YWwgc2VydmVyQWxpdmUgPSBBdG9taWNCb29sZWFuKGZhbHNlKQogICAgQFZvbGF0aWxlIHByaXZhdGUgdmFyIGJhY2tlbmREaXI6IEZpbGU/ID0gbnVsbAoKICAgIC8qKiBTdGFydHMgdGhlIEFQSSBzZXJ2ZXIgaWYgaXQgaXNuJ3QgcnVubmluZy4gU2FmZSB0byBjYWxsIHJlcGVhdGVkbHkuICovCiAgICBmdW4gZW5zdXJlU3RhcnRlZChjdHg6IENvbnRleHQpIHsKICAgICAgICBpZiAoIU5vZGVCcmlkZ2UuYXZhaWxhYmxlKSB7CiAgICAgICAgICAgIExvZ0J1cy53KExvZ0NhdGVnb3J5Lk5PREUsICJFbWJlZGRlZCBub2RlIG5vdCBidW5kbGVkIChsaWJub2RlLnNvIG1pc3NpbmcpIOKAlCBBeVggYmFja2VuZCBkaXNhYmxlZCIpCiAgICAgICAgICAgIHJldHVybgogICAgICAgIH0KICAgICAgICAvLyBub2RlOjpTdGFydCBjYW4gb25seSBiZSBjYWxsZWQgT05DRSBwZXIgT1MgcHJvY2VzcyDigJQgYSBzZWNvbmQgY2FsbCB0cmlwcwogICAgICAgIC8vIGEgTm9kZSBhc3NlcnRpb24gYW5kIFNJR0FCUlRzIHRoZSB3aG9sZSBhcHAgKHRoZSBDKysgYnJpZGdlIGFsc28gcmVmdXNlcwogICAgICAgIC8vIGl0KS4gU28gdGhpcyBpcyBvbmUtc2hvdDogaWYgbm9kZSBleGl0cywgd2UgbG9nIGFuZCBzdGF5IGRvd24gdW50aWwgdGhlCiAgICAgICAgLy8gYXBwIHByb2Nlc3MgcmVzdGFydHMuIE5ldmVyIHJlc2V0IHRoaXMgZmxhZyB0byAicmV0cnkiLgogICAgICAgIGlmICghc3RhcnRBdHRlbXB0ZWQuY29tcGFyZUFuZFNldChmYWxzZSwgdHJ1ZSkpIHsKICAgICAgICAgICAgTG9nQnVzLncoTG9nQ2F0ZWdvcnkuTk9ERSwgIkJhY2tlbmQgc3RhcnQgYWxyZWFkeSBhdHRlbXB0ZWQgaW4gdGhpcyBwcm9jZXNzIOKAlCBub3QgcmV0cnlpbmciKQogICAgICAgICAgICByZXR1cm4KICAgICAgICB9CiAgICAgICAgdmFsIGRpciA9IHByZXBhcmUoY3R4KSA/OiByZXR1cm4KICAgICAgICBiYWNrZW5kRGlyID0gZGlyCiAgICAgICAgYXBwbHlFbnYoY3R4LCBkaXIpCiAgICAgICAgVGhyZWFkKHsKICAgICAgICAgICAgTG9nQnVzLmkoTG9nQ2F0ZWdvcnkuTk9ERSwgInN0YXJ0aW5nIEF5WCBiYWNrZW5kOiAke2Rpci5hYnNvbHV0ZVBhdGh9L3NyYy9zZXJ2ZXIuanMiKQogICAgICAgICAgICBzZXJ2ZXJBbGl2ZS5zZXQodHJ1ZSkKICAgICAgICAgICAgdHJ5IHsKICAgICAgICAgICAgICAgIHZhbCByYyA9IE5vZGVCcmlkZ2UubmF0aXZlU3RhcnQoYXJyYXlPZigibm9kZSIsICJzcmMvc2VydmVyLmpzIiksIGRpci5hYnNvbHV0ZVBhdGgpCiAgICAgICAgICAgICAgICBpZiAocmMgPT0gLTk5KSB7CiAgICAgICAgICAgICAgICAgICAgTG9nQnVzLmUoTG9nQ2F0ZWdvcnkuTk9ERSwgIkJhY2tlbmQgc3RhcnQgcmVmdXNlZDogbm9kZSBhbHJlYWR5IHN0YXJ0ZWQgaW4gdGhpcyBwcm9jZXNzIikKICAgICAgICAgICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgICAgICAgICAgTG9nQnVzLncoTG9nQ2F0ZWdvcnkuTk9ERSwgIkF5WCBiYWNrZW5kIGV4aXRlZCByYz0kcmMg4oCUIHNlZSBub2RlLmxvZyB0YWlsOiAke25vZGVMb2dUYWlsKGN0eCkudGFrZUxhc3QoNTAwKX0iKQogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9IGNhdGNoIChlOiBUaHJvd2FibGUpIHsKICAgICAgICAgICAgICAgIExvZ0J1cy5lKExvZ0NhdGVnb3J5Lk5PREUsICJBeVggYmFja2VuZCBmYWlsZWQgdG8gc3RhcnQ6ICR7ZS5tZXNzYWdlfSIpCiAgICAgICAgICAgIH0gZmluYWxseSB7CiAgICAgICAgICAgICAgICBzZXJ2ZXJBbGl2ZS5zZXQoZmFsc2UpCiAgICAgICAgICAgIH0KICAgICAgICB9LCAiYXl4LWJhY2tlbmQiKS5zdGFydCgpCiAgICB9CgogICAgLyoqCiAgICAgKiBDcmVhdGVzIHRoZSBGSVJTVCBBeVggYmFja2VuZCBhZG1pbiBhY2NvdW50IHZpYSB0aGUgdG9rZW4tZ3VhcmRlZAogICAgICogYFBPU1QgL3YxL2xvY2FsL2FkbWluL2Jvb3RzdHJhcGAgZW5kcG9pbnQgb24gdGhlIGFscmVhZHktcnVubmluZyBzZXJ2ZXIuCiAgICAgKiBUaGlzIE1VU1QgZ28gb3ZlciBIVFRQOiBzdGFydGluZyBhIHNlY29uZCBub2RlIHByb2Nlc3MgaW4gdGhpcyBPUyBwcm9jZXNzCiAgICAgKiB3b3VsZCB0cmlwIE5vZGUncyBvbmUtc3RhcnQtcGVyLXByb2Nlc3MgYXNzZXJ0aW9uIGFuZCBjcmFzaCB0aGUgYXBwLgogICAgICogW29uRG9uZV0gaXMgaW52b2tlZCBvbmNlIHdpdGggdGhlIG91dGNvbWUuIFRoZSBwYXNzd29yZCBpcyBzZW50IG9ubHkgaW4KICAgICAqIHRoZSByZXF1ZXN0IGJvZHkgYW5kIGlzIG5ldmVyIHN0b3JlZCBvciBsb2dnZWQuCiAgICAgKi8KICAgIGZ1biBib290c3RyYXBBZG1pbigKICAgICAgICBjdHg6IENvbnRleHQsCiAgICAgICAgdXNlcm5hbWU6IFN0cmluZywKICAgICAgICBwYXNzd29yZDogU3RyaW5nLAogICAgICAgIG9uRG9uZTogKG9rOiBCb29sZWFuLCBtZXNzYWdlOiBTdHJpbmcpIC0+IFVuaXQKICAgICkgewogICAgICAgIFRocmVhZCh7CiAgICAgICAgICAgIHRyeSB7CiAgICAgICAgICAgICAgICAvLyBEb24ndCBnYXRlIG9uIGlzU2VydmVyUnVubmluZygpOiBqdXN0IHRyeSB0aGUgbG9vcGJhY2sgSFRUUCBjYWxsLgogICAgICAgICAgICAgICAgLy8gSWYgbm9kZSBpcyB1cCwgdGhpcyBzdWNjZWVkcyBldmVuIGlmIG91ciBsaXZlbmVzcyBmbGFnIGlzIHN0YWxlOwogICAgICAgICAgICAgICAgLy8gaWYgaXQncyBkb3duIHdlIGdldCBhIGZhc3QgY29ubmVjdGlvbi1yZWZ1c2VkLgogICAgICAgICAgICAgICAgdmFsIHVybCA9IGphdmEubmV0LlVSTCgiaHR0cDovLzEyNy4wLjAuMTokUE9SVC92MS9sb2NhbC9hZG1pbi9ib290c3RyYXAiKQogICAgICAgICAgICAgICAgdmFsIGNvbm4gPSAodXJsLm9wZW5Db25uZWN0aW9uKCkgYXMgamF2YS5uZXQuSHR0cFVSTENvbm5lY3Rpb24pLmFwcGx5IHsKICAgICAgICAgICAgICAgICAgICByZXF1ZXN0TWV0aG9kID0gIlBPU1QiCiAgICAgICAgICAgICAgICAgICAgY29ubmVjdFRpbWVvdXQgPSAxNTAwMAogICAgICAgICAgICAgICAgICAgIHJlYWRUaW1lb3V0ID0gMTUwMDAKICAgICAgICAgICAgICAgICAgICBkb091dHB1dCA9IHRydWUKICAgICAgICAgICAgICAgICAgICBzZXRSZXF1ZXN0UHJvcGVydHkoIkNvbnRlbnQtVHlwZSIsICJhcHBsaWNhdGlvbi9qc29uIikKICAgICAgICAgICAgICAgICAgICBzZXRSZXF1ZXN0UHJvcGVydHkoIngtbG9jYWwtdG9rZW4iLCBsb2NhbE9wVG9rZW4oY3R4KSkKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIHZhbCBib2R5ID0gb3JnLmpzb24uSlNPTk9iamVjdCgpCiAgICAgICAgICAgICAgICAgICAgLnB1dCgidXNlcm5hbWUiLCB1c2VybmFtZSkKICAgICAgICAgICAgICAgICAgICAucHV0KCJwYXNzd29yZCIsIHBhc3N3b3JkKQogICAgICAgICAgICAgICAgICAgIC50b1N0cmluZygpCiAgICAgICAgICAgICAgICBjb25uLm91dHB1dFN0cmVhbS51c2UgeyBpdC53cml0ZShib2R5LnRvQnl0ZUFycmF5KENoYXJzZXRzLlVURl84KSkgfQogICAgICAgICAgICAgICAgdmFsIGNvZGUgPSBjb25uLnJlc3BvbnNlQ29kZQogICAgICAgICAgICAgICAgdmFsIHJlc3AgPSB0cnkgewogICAgICAgICAgICAgICAgICAgIGNvbm4uaW5wdXRTdHJlYW0uYnVmZmVyZWRSZWFkZXIoKS5yZWFkVGV4dCgpCiAgICAgICAgICAgICAgICB9IGNhdGNoIChfOiBFeGNlcHRpb24pIHsKICAgICAgICAgICAgICAgICAgICBjb25uLmVycm9yU3RyZWFtPy5idWZmZXJlZFJlYWRlcigpPy5yZWFkVGV4dCgpLm9yRW1wdHkoKQogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgd2hlbiAoY29kZSkgewogICAgICAgICAgICAgICAgICAgIDIwMSAtPiBvbkRvbmUodHJ1ZSwgIkFkbWluIFwiJHVzZXJuYW1lXCIgY3JlYXRlZC4iKQogICAgICAgICAgICAgICAgICAgIDQwOSAtPiBvbkRvbmUoZmFsc2UsICJBbiBhZG1pbiBhY2NvdW50IGFscmVhZHkgZXhpc3RzLiIpCiAgICAgICAgICAgICAgICAgICAgNDAzIC0+IG9uRG9uZShmYWxzZSwgIk5vdCBhdXRob3JpemVkLiIpCiAgICAgICAgICAgICAgICAgICAgZWxzZSAtPiBvbkRvbmUoZmFsc2UsICJTZXJ2ZXIgcmV0dXJuZWQgJGNvZGU6ICR7cmVzcC50YWtlKDIwMCl9IikKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfSBjYXRjaCAoZTogamF2YS5uZXQuQ29ubmVjdEV4Y2VwdGlvbikgewogICAgICAgICAgICAgICAgdmFsIHRhaWwgPSBub2RlTG9nVGFpbChjdHgpLnRha2VMYXN0KDgwMCkKICAgICAgICAgICAgICAgIG9uRG9uZShmYWxzZSwgIkJhY2tlbmQgaXMgbm90IHJ1bm5pbmcg4oCUIHN0YXJ0IGhvc3RpbmcgZmlyc3QsIHRoZW4gY3JlYXRlIHRoZSBhZG1pbiBhY2NvdW50LlxuXG5Ob2RlIGxvZzpcbiR0YWlsIikKICAgICAgICAgICAgfSBjYXRjaCAoZTogRXhjZXB0aW9uKSB7CiAgICAgICAgICAgICAgICBvbkRvbmUoZmFsc2UsICJDb3VsZCBub3QgcmVhY2ggdGhlIGJhY2tlbmQ6ICR7ZS5tZXNzYWdlfSIpCiAgICAgICAgICAgIH0KICAgICAgICB9LCAiYXl4LWFkbWluLWJvb3RzdHJhcCIpLnN0YXJ0KCkKICAgIH0KCiAgICAvKiogVHJ1ZSB3aGlsZSB0aGUgQVBJIHNlcnZlciB0aHJlYWQgaXMgdXAuICovCiAgICBmdW4gaXNTZXJ2ZXJSdW5uaW5nKCk6IEJvb2xlYW4gPSBzZXJ2ZXJBbGl2ZS5nZXQoKQoKICAgIC8qKiBBYnNvbHV0ZSBwYXRoIG9mIHRoZSBleHRyYWN0ZWQgYmFja2VuZCBkaXIsIG9yIG51bGwgaWYgbm90IHByZXBhcmVkIHlldC4gKi8KICAgIGZ1biBkaXIoKTogRmlsZT8gPSBiYWNrZW5kRGlyCgogICAgLyoqIExhc3QgfjJLQiBvZiB0aGUgZW1iZWRkZWQgbm9kZSdzIGxvZyAobm9kZS5sb2cpLCBmb3Igb24tZGV2aWNlIGRpYWdub3N0aWNzLiAqLwogICAgZnVuIG5vZGVMb2dUYWlsKGN0eDogQ29udGV4dCk6IFN0cmluZyB7CiAgICAgICAgcmV0dXJuIHRyeSB7CiAgICAgICAgICAgIHZhbCBmID0gRmlsZShGaWxlKGN0eC5maWxlc0RpciwgImF5eC1iYWNrZW5kIiksICJub2RlLmxvZyIpCiAgICAgICAgICAgIGlmICghZi5leGlzdHMoKSkgcmV0dXJuICIobm8gbm9kZSBsb2cgeWV0KSIKICAgICAgICAgICAgdmFsIGJ5dGVzID0gZi5yZWFkQnl0ZXMoKQogICAgICAgICAgICB2YWwgdGFpbCA9IGlmIChieXRlcy5zaXplID4gMjA0OCkgYnl0ZXMuY29weU9mUmFuZ2UoYnl0ZXMuc2l6ZSAtIDIwNDgsIGJ5dGVzLnNpemUpIGVsc2UgYnl0ZXMKICAgICAgICAgICAgdGFpbC50b1N0cmluZyhDaGFyc2V0cy5VVEZfOCkKICAgICAgICB9IGNhdGNoIChlOiBFeGNlcHRpb24pIHsKICAgICAgICAgICAgIihjb3VsZCBub3QgcmVhZCBub2RlIGxvZzogJHtlLm1lc3NhZ2V9KSIKICAgICAgICB9CiAgICB9CgogICAgLy8gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tIGludGVybmFscwoKICAgIHByaXZhdGUgZnVuIHByZXBhcmUoY3R4OiBDb250ZXh0KTogRmlsZT8gewogICAgICAgIHJldHVybiB0cnkgewogICAgICAgICAgICB2YWwgZGlyID0gRmlsZShjdHguZmlsZXNEaXIsICJheXgtYmFja2VuZCIpCiAgICAgICAgICAgIGV4dHJhY3RJZk5lZWRlZChjdHgsIGRpcikKICAgICAgICAgICAgRmlsZShkaXIsICJkYXRhIikubWtkaXJzKCkKICAgICAgICAgICAgRmlsZShkaXIsICJ1cGxvYWRzIikubWtkaXJzKCkKICAgICAgICAgICAgZGlyCiAgICAgICAgfSBjYXRjaCAoZTogRXhjZXB0aW9uKSB7CiAgICAgICAgICAgIExvZ0J1cy5lKExvZ0NhdGVnb3J5Lk5PREUsICJCYWNrZW5kIHByZXBhcmUgZmFpbGVkOiAke2UubWVzc2FnZX0iKQogICAgICAgICAgICBudWxsCiAgICAgICAgfQogICAgfQoKICAgIHByaXZhdGUgZnVuIGFwcGx5RW52KGN0eDogQ29udGV4dCwgZGlyOiBGaWxlKSB7CiAgICAgICAgdmFsIGNhY2hlID0gRmlsZShjdHguY2FjaGVEaXIsICJheXgtbm9kZS1jYWNoZSIpLmFwcGx5IHsgbWtkaXJzKCkgfQogICAgICAgIE5vZGVCcmlkZ2UubmF0aXZlU2V0ZW52KCJUTVBESVIiLCBjdHguY2FjaGVEaXIuYWJzb2x1dGVQYXRoKQogICAgICAgIE5vZGVCcmlkZ2UubmF0aXZlU2V0ZW52KCJIT01FIiwgY3R4LmZpbGVzRGlyLmFic29sdXRlUGF0aCkKICAgICAgICBOb2RlQnJpZGdlLm5hdGl2ZVNldGVudigiTk9ERV9DT01QSUxFX0NBQ0hFIiwgY2FjaGUuYWJzb2x1dGVQYXRoKQogICAgICAgIC8vIFY4IHNpemVzIG9sZC1zcGFjZSBmcm9tIHRvdGFsIFJBTTsgY2FwIGl0IHNvIHRoZSBPUyBkb2Vzbid0IE9PTS1raWxsIHRoZSBhcHAuCiAgICAgICAgTm9kZUJyaWRnZS5uYXRpdmVTZXRlbnYoIk5PREVfT1BUSU9OUyIsICItLW1heC1vbGQtc3BhY2Utc2l6ZS1wZXJjZW50YWdlPTUwIikKICAgICAgICBOb2RlQnJpZGdlLm5hdGl2ZVNldGVudigiTk9ERV9FTlYiLCAicHJvZHVjdGlvbiIpCiAgICAgICAgTm9kZUJyaWRnZS5uYXRpdmVTZXRlbnYoIlBPUlQiLCBQT1JULnRvU3RyaW5nKCkpCiAgICAgICAgTm9kZUJyaWRnZS5uYXRpdmVTZXRlbnYoIkRCX1BBVEgiLCBGaWxlKGRpciwgImRhdGEvYXl4LmRiIikuYWJzb2x1dGVQYXRoKQogICAgICAgIE5vZGVCcmlkZ2UubmF0aXZlU2V0ZW52KCJVUExPQURfRElSIiwgRmlsZShkaXIsICJ1cGxvYWRzIikuYWJzb2x1dGVQYXRoKQogICAgICAgIE5vZGVCcmlkZ2UubmF0aXZlU2V0ZW52KCJTRVNTSU9OX1NFQ1JFVCIsIHNlc3Npb25TZWNyZXQoY3R4KSkKICAgICAgICBOb2RlQnJpZGdlLm5hdGl2ZVNldGVudigiTE9DQUxfT1BfVE9LRU4iLCBsb2NhbE9wVG9rZW4oY3R4KSkKICAgICAgICBOb2RlQnJpZGdlLm5hdGl2ZVNldGVudigiQVBJX1BVQkxJQ19CQVNFIiwgImh0dHBzOi8vYXBpLmltYXl4LmluIikKICAgIH0KCiAgICBwcml2YXRlIGZ1biBzZXNzaW9uU2VjcmV0KGN0eDogQ29udGV4dCk6IFN0cmluZyA9CiAgICAgICAgZ2V0T3JDcmVhdGVIZXhTZWNyZXQoY3R4LCBLRVlfU0VTU0lPTl9TRUNSRVQpCgogICAgcHJpdmF0ZSBmdW4gbG9jYWxPcFRva2VuKGN0eDogQ29udGV4dCk6IFN0cmluZyA9CiAgICAgICAgZ2V0T3JDcmVhdGVIZXhTZWNyZXQoY3R4LCBLRVlfTE9DQUxfT1BfVE9LRU4pCgogICAgcHJpdmF0ZSBmdW4gZ2V0T3JDcmVhdGVIZXhTZWNyZXQoY3R4OiBDb250ZXh0LCBrZXk6IFN0cmluZyk6IFN0cmluZyB7CiAgICAgICAgdmFsIGFsaWFzID0gTWFzdGVyS2V5cy5nZXRPckNyZWF0ZShNYXN0ZXJLZXlzLkFFUzI1Nl9HQ01fU1BFQykKICAgICAgICB2YWwgcHJlZnMgPSBFbmNyeXB0ZWRTaGFyZWRQcmVmZXJlbmNlcy5jcmVhdGUoCiAgICAgICAgICAgIFBSRUZTX0ZJTEUsCiAgICAgICAgICAgIGFsaWFzLAogICAgICAgICAgICBjdHguYXBwbGljYXRpb25Db250ZXh0LAogICAgICAgICAgICBFbmNyeXB0ZWRTaGFyZWRQcmVmZXJlbmNlcy5QcmVmS2V5RW5jcnlwdGlvblNjaGVtZS5BRVMyNTZfU0lWLAogICAgICAgICAgICBFbmNyeXB0ZWRTaGFyZWRQcmVmZXJlbmNlcy5QcmVmVmFsdWVFbmNyeXB0aW9uU2NoZW1lLkFFUzI1Nl9HQ00KICAgICAgICApCiAgICAgICAgcHJlZnMuZ2V0U3RyaW5nKGtleSwgbnVsbCk/LmxldCB7IHJldHVybiBpdCB9CiAgICAgICAgdmFsIGJ5dGVzID0gQnl0ZUFycmF5KDMyKQogICAgICAgIFNlY3VyZVJhbmRvbSgpLm5leHRCeXRlcyhieXRlcykKICAgICAgICB2YWwgaGV4ID0gYnl0ZXMuam9pblRvU3RyaW5nKCIiKSB7ICIlMDJ4Ii5mb3JtYXQoaXQpIH0KICAgICAgICBwcmVmcy5lZGl0KCkucHV0U3RyaW5nKGtleSwgaGV4KS5hcHBseSgpCiAgICAgICAgcmV0dXJuIGhleAogICAgfQoKICAgIHByaXZhdGUgZnVuIGV4dHJhY3RJZk5lZWRlZChjdHg6IENvbnRleHQsIGRpcjogRmlsZSkgewogICAgICAgIHZhbCBtYXJrZXIgPSBGaWxlKGRpciwgIi52ZXJzaW9uIikKICAgICAgICB2YWwgY3VycmVudCA9IGN0eC5wYWNrYWdlTWFuYWdlci5nZXRQYWNrYWdlSW5mbyhjdHgucGFja2FnZU5hbWUsIDApLmxhc3RVcGRhdGVUaW1lLnRvU3RyaW5nKCkKICAgICAgICBpZiAobWFya2VyLmV4aXN0cygpICYmIG1hcmtlci5yZWFkVGV4dCgpID09IGN1cnJlbnQpIHJldHVybgoKICAgICAgICBMb2dCdXMuaShMb2dDYXRlZ29yeS5OT0RFLCAiZXh0cmFjdGluZyBheXgtYmFja2VuZC56aXAgKHY9JGN1cnJlbnQpIikKICAgICAgICBkaXIuZGVsZXRlUmVjdXJzaXZlbHkoKQogICAgICAgIGRpci5ta2RpcnMoKQogICAgICAgIGN0eC5hc3NldHMub3BlbigiYXl4LWJhY2tlbmQuemlwIikudXNlIHsgcmF3IC0+CiAgICAgICAgICAgIFppcElucHV0U3RyZWFtKHJhdykudXNlIHsgemlwIC0+CiAgICAgICAgICAgICAgICB2YXIgZSA9IHppcC5uZXh0RW50cnkKICAgICAgICAgICAgICAgIHZhbCBidWYgPSBCeXRlQXJyYXkoNjQgKiAxMDI0KQogICAgICAgICAgICAgICAgd2hpbGUgKGUgIT0gbnVsbCkgewogICAgICAgICAgICAgICAgICAgIC8vIFppcCBTbGlwIGd1YXJkOiBlbnRyaWVzIG11c3Qgc3RheSBpbnNpZGUgZGlyLgogICAgICAgICAgICAgICAgICAgIHZhbCBvdXQgPSBGaWxlKGRpciwgZS5uYW1lKQogICAgICAgICAgICAgICAgICAgIHJlcXVpcmUob3V0LmNhbm9uaWNhbFBhdGguc3RhcnRzV2l0aChkaXIuY2Fub25pY2FsUGF0aCArIEZpbGUuc2VwYXJhdG9yKSkgewogICAgICAgICAgICAgICAgICAgICAgICAiUmVmdXNpbmcgemlwIGVudHJ5IG91dHNpZGUgYmFja2VuZCBkaXI6ICR7ZS5uYW1lfSIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgaWYgKGUuaXNEaXJlY3RvcnkpIHsKICAgICAgICAgICAgICAgICAgICAgICAgb3V0Lm1rZGlycygpCiAgICAgICAgICAgICAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgICAgICAgICAgICAgb3V0LnBhcmVudEZpbGU/Lm1rZGlycygpCiAgICAgICAgICAgICAgICAgICAgICAgIEZpbGVPdXRwdXRTdHJlYW0ob3V0KS51c2UgeyBmb3MgLT4KICAgICAgICAgICAgICAgICAgICAgICAgICAgIHZhciBuID0gemlwLnJlYWQoYnVmKQogICAgICAgICAgICAgICAgICAgICAgICAgICAgd2hpbGUgKG4gPj0gMCkgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZvcy53cml0ZShidWYsIDAsIG4pCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbiA9IHppcC5yZWFkKGJ1ZikKICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICB6aXAuY2xvc2VFbnRyeSgpCiAgICAgICAgICAgICAgICAgICAgZSA9IHppcC5uZXh0RW50cnkKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICBtYXJrZXIud3JpdGVUZXh0KGN1cnJlbnQpCiAgICAgICAgTG9nQnVzLmkoTG9nQ2F0ZWdvcnkuTk9ERSwgImJhY2tlbmQgZXh0cmFjdGlvbiBkb25lIikKICAgIH0KfQo=
+package com.imayx.host.node
+
+import android.content.Context
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
+import com.imayx.host.data.LogBus
+import com.imayx.host.data.LogCategory
+import java.io.File
+import java.io.FileOutputStream
+import java.security.SecureRandom
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.zip.ZipInputStream
+
+/**
+ * Owns the embedded AyX Group backend (Node.js + SQLite, running inside the app
+ * process via [NodeBridge] — no Termux, no external Node binary needed).
+ *
+ * - The backend is bundled as `assets/ayx-backend.zip` and extracted on first run
+ *   (or after an app update) to `filesDir/ayx-backend`.
+ * - The long-lived API server (`node src/server.js`, port 3101) is started exactly
+ *   once per OS process via [ensureStarted], guarded by an [AtomicBoolean].
+ * - NOTE: wish-service integration was reverted (2026-10-13) — launcher.js caused
+ *   startup crashes. Wish will be re-added after root cause is fixed.
+ * - CRITICAL: `node::Start` can only be called ONCE per process — a second call
+ *   trips a Node assertion and SIGABRTs the whole app. There is therefore NO
+ *   API for running one-shot node scripts: all local operations (e.g. admin
+ *   bootstrap) go through the token-guarded `/v1/local/` HTTP endpoints on the
+ *   already-running server instead (see [bootstrapAdmin]).
+ * - SESSION_SECRET and LOCAL_OP_TOKEN are generated once (SecureRandom, 32 bytes
+ *   hex each) and kept in EncryptedSharedPreferences; the SQLite DB lives at
+ *   `filesDir/ayx-backend/data/ayx.db`. None are ever logged.
+ */
+object AyxBackendRuntime {
+    const val PORT = 3101
+    private const val PREFS_FILE = "ayx_backend"
+    private const val KEY_SESSION_SECRET = "session_secret"
+    private const val KEY_LOCAL_OP_TOKEN = "local_op_token"
+
+    private val startAttempted = AtomicBoolean(false)
+    private val serverAlive = AtomicBoolean(false)
+    @Volatile private var backendDir: File? = null
+
+    /** Starts the API server if it isn't running. Safe to call repeatedly. */
+    fun ensureStarted(ctx: Context) {
+        if (!NodeBridge.available) {
+            LogBus.w(LogCategory.NODE, "Embedded node not bundled (libnode.so missing) — AyX backend disabled")
+            return
+        }
+        // node::Start can only be called ONCE per OS process — a second call trips
+        // a Node assertion and SIGABRTs the whole app (the C++ bridge also refuses
+        // it). So this is one-shot: if node exits, we log and stay down until the
+        // app process restarts. Never reset this flag to "retry".
+        if (!startAttempted.compareAndSet(false, true)) {
+            LogBus.w(LogCategory.NODE, "Backend start already attempted in this process — not retrying")
+            return
+        }
+        val dir = prepare(ctx) ?: return
+        backendDir = dir
+        applyEnv(ctx, dir)
+        Thread({
+            LogBus.i(LogCategory.NODE, "starting AyX backend: ${dir.absolutePath}/src/server.js")
+            serverAlive.set(true)
+            try {
+                val rc = NodeBridge.nativeStart(arrayOf("node", "src/server.js"), dir.absolutePath)
+                if (rc == -99) {
+                    LogBus.e(LogCategory.NODE, "Backend start refused: node already started in this process")
+                } else {
+                    LogBus.w(LogCategory.NODE, "AyX backend exited rc=$rc — see node.log tail: ${nodeLogTail(ctx).takeLast(500)}")
+                }
+            } catch (e: Throwable) {
+                LogBus.e(LogCategory.NODE, "AyX backend failed to start: ${e.message}")
+            } finally {
+                serverAlive.set(false)
+            }
+        }, "ayx-backend").start()
+    }
+
+    /**
+     * Creates the FIRST AyX backend admin account via the token-guarded
+     * `POST /v1/local/admin/bootstrap` endpoint on the already-running server.
+     * This MUST go over HTTP: starting a second node process in this OS process
+     * would trip Node's one-start-per-process assertion and crash the app.
+     * [onDone] is invoked once with the outcome. The password is sent only in
+     * the request body and is never stored or logged.
+     */
+    fun bootstrapAdmin(
+        ctx: Context,
+        username: String,
+        password: String,
+        onDone: (ok: Boolean, message: String) -> Unit
+    ) {
+        Thread({
+            try {
+                // Don't gate on isServerRunning(): just try the loopback HTTP call.
+                // If node is up, this succeeds even if our liveness flag is stale;
+                // if it's down we get a fast connection-refused.
+                val url = java.net.URL("http://127.0.0.1:$PORT/v1/local/admin/bootstrap")
+                val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 15000
+                    readTimeout = 15000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("x-local-token", localOpToken(ctx))
+                }
+                val body = org.json.JSONObject()
+                    .put("username", username)
+                    .put("password", password)
+                    .toString()
+                conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+                val code = conn.responseCode
+                val resp = try {
+                    conn.inputStream.bufferedReader().readText()
+                } catch (_: Exception) {
+                    conn.errorStream?.bufferedReader()?.readText().orEmpty()
+                }
+                when (code) {
+                    201 -> onDone(true, "Admin \"$username\" created.")
+                    409 -> onDone(false, "An admin account already exists.")
+                    403 -> onDone(false, "Not authorized.")
+                    else -> onDone(false, "Server returned $code: ${resp.take(200)}")
+                }
+            } catch (e: java.net.ConnectException) {
+                val tail = nodeLogTail(ctx).takeLast(800)
+                onDone(false, "Backend is not running — start hosting first, then create the admin account.\n\nNode log:\n$tail")
+            } catch (e: Exception) {
+                onDone(false, "Could not reach the backend: ${e.message}")
+            }
+        }, "ayx-admin-bootstrap").start()
+    }
+
+    /** True while the API server thread is up. */
+    fun isServerRunning(): Boolean = serverAlive.get()
+
+    /** Absolute path of the extracted backend dir, or null if not prepared yet. */
+    fun dir(): File? = backendDir
+
+    /** Last ~2KB of the embedded node's log (node.log), for on-device diagnostics. */
+    fun nodeLogTail(ctx: Context): String {
+        return try {
+            val f = File(File(ctx.filesDir, "ayx-backend"), "node.log")
+            if (!f.exists()) return "(no node log yet)"
+            val bytes = f.readBytes()
+            val tail = if (bytes.size > 2048) bytes.copyOfRange(bytes.size - 2048, bytes.size) else bytes
+            tail.toString(Charsets.UTF_8)
+        } catch (e: Exception) {
+            "(could not read node log: ${e.message})"
+        }
+    }
+
+    // ------------------------------------------------------------------ internals
+
+    private fun prepare(ctx: Context): File? {
+        return try {
+            val dir = File(ctx.filesDir, "ayx-backend")
+            extractIfNeeded(ctx, dir)
+            File(dir, "data").mkdirs()
+            File(dir, "uploads").mkdirs()
+            dir
+        } catch (e: Exception) {
+            LogBus.e(LogCategory.NODE, "Backend prepare failed: ${e.message}")
+            null
+        }
+    }
+
+    private fun applyEnv(ctx: Context, dir: File) {
+        val cache = File(ctx.cacheDir, "ayx-node-cache").apply { mkdirs() }
+        NodeBridge.nativeSetenv("TMPDIR", ctx.cacheDir.absolutePath)
+        NodeBridge.nativeSetenv("HOME", ctx.filesDir.absolutePath)
+        NodeBridge.nativeSetenv("NODE_COMPILE_CACHE", cache.absolutePath)
+        // V8 sizes old-space from total RAM; cap it so the OS doesn't OOM-kill the app.
+        NodeBridge.nativeSetenv("NODE_OPTIONS", "--max-old-space-size-percentage=50")
+        NodeBridge.nativeSetenv("NODE_ENV", "production")
+        NodeBridge.nativeSetenv("PORT", PORT.toString())
+        NodeBridge.nativeSetenv("DB_PATH", File(dir, "data/ayx.db").absolutePath)
+        NodeBridge.nativeSetenv("UPLOAD_DIR", File(dir, "uploads").absolutePath)
+        NodeBridge.nativeSetenv("SESSION_SECRET", sessionSecret(ctx))
+        NodeBridge.nativeSetenv("LOCAL_OP_TOKEN", localOpToken(ctx))
+        NodeBridge.nativeSetenv("API_PUBLIC_BASE", "https://api.imayx.in")
+    }
+
+    private fun sessionSecret(ctx: Context): String =
+        getOrCreateHexSecret(ctx, KEY_SESSION_SECRET)
+
+    private fun localOpToken(ctx: Context): String =
+        getOrCreateHexSecret(ctx, KEY_LOCAL_OP_TOKEN)
+
+    private fun getOrCreateHexSecret(ctx: Context, key: String): String {
+        val alias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        val prefs = EncryptedSharedPreferences.create(
+            PREFS_FILE,
+            alias,
+            ctx.applicationContext,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+        prefs.getString(key, null)?.let { return it }
+        val bytes = ByteArray(32)
+        SecureRandom().nextBytes(bytes)
+        val hex = bytes.joinToString("") { "%02x".format(it) }
+        prefs.edit().putString(key, hex).apply()
+        return hex
+    }
+
+    private fun extractIfNeeded(ctx: Context, dir: File) {
+        val marker = File(dir, ".version")
+        val current = ctx.packageManager.getPackageInfo(ctx.packageName, 0).lastUpdateTime.toString()
+        if (marker.exists() && marker.readText() == current) return
+
+        LogBus.i(LogCategory.NODE, "extracting ayx-backend.zip (v=$current)")
+        dir.deleteRecursively()
+        dir.mkdirs()
+        ctx.assets.open("ayx-backend.zip").use { raw ->
+            ZipInputStream(raw).use { zip ->
+                var e = zip.nextEntry
+                val buf = ByteArray(64 * 1024)
+                while (e != null) {
+                    // Zip Slip guard: entries must stay inside dir.
+                    val out = File(dir, e.name)
+                    require(out.canonicalPath.startsWith(dir.canonicalPath + File.separator)) {
+                        "Refusing zip entry outside backend dir: ${e.name}"
+                    }
+                    if (e.isDirectory) {
+                        out.mkdirs()
+                    } else {
+                        out.parentFile?.mkdirs()
+                        FileOutputStream(out).use { fos ->
+                            var n = zip.read(buf)
+                            while (n >= 0) {
+                                fos.write(buf, 0, n)
+                                n = zip.read(buf)
+                            }
+                        }
+                    }
+                    zip.closeEntry()
+                    e = zip.nextEntry
+                }
+            }
+        }
+        marker.writeText(current)
+        LogBus.i(LogCategory.NODE, "backend extraction done")
+    }
+}
