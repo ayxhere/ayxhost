@@ -193,7 +193,7 @@ object AyxBackendRuntime {
             |process.on('unhandledRejection', (e) => console.error('[launcher] unhandled:', e?.message));
             |
             |process.env.WISH_PORT = process.env.WISH_PORT || '3102';
-            |process.env.WISH_BASE_URL = process.env.WISH_BASE_URL || 'https://wish.imayx.in';
+            |process.env.WISH_BASE_URL = process.env.WISH_BASE_URL || 'https://imayx.in';
             |
             |// Wish is CommonJS — use require
             |try {
@@ -232,7 +232,7 @@ object AyxBackendRuntime {
         NodeBridge.nativeSetenv("LOCAL_OP_TOKEN", localOpToken(ctx))
         NodeBridge.nativeSetenv("API_PUBLIC_BASE", "https://api.imayx.in")
         NodeBridge.nativeSetenv("WISH_PORT", "3102")
-        NodeBridge.nativeSetenv("WISH_BASE_URL", "https://wish.imayx.in")
+        NodeBridge.nativeSetenv("WISH_BASE_URL", "https://imayx.in")
     }
 
     private fun sessionSecret(ctx: Context): String =
